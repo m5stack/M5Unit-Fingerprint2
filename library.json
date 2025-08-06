@@ -1,0 +1,24 @@
+{
+    "name": "M5Unit-Fingerprint2-Library",
+    "description": "M5Stack Library of Unit Fingerprint2",
+    "keywords": "M5Stack,Unit,Fingerprint2",
+    "authors": {
+        "name": "M5Stack",
+        "url": "http://www.m5stack.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://gitlab.m5stack.com/moyongming/m5unit-fingerprint2-library.git"
+    },
+    "version": "1.0.0",
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "espressif32",
+        "native"
+    ],
+    "headers": "m5_unit_fingerprint2.hpp",
+    "dependencies": {
+  }  
+}
