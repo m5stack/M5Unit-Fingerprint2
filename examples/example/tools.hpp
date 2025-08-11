@@ -17,9 +17,9 @@ extern TaskHandle_t fingerDetectionTaskHandle;
  * @param displayX 显示位置X坐标
  * @param displayY 显示位置Y坐标
  * @param rotation 旋转角度
- * @return esp_err_t ESP_OK表示成功，其他值表示失败
+ * @return bool true表示成功，false表示失败
  */
-esp_err_t displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBufferSize, M5Canvas& canvas, int displayX, int displayY, uint8_t rotation);
+bool displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBufferSize, M5Canvas& canvas, int displayX, int displayY, uint8_t rotation);
 
 /**
  * @brief 自动读取并显示系统参数到画布上
@@ -29,9 +29,9 @@ esp_err_t displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t max
  * @param displayX 显示位置X坐标
  * @param displayY 显示位置Y坐标
  * @param clearArea 是否清除显示区域 (true/false)
- * @return esp_err_t ESP_OK表示成功，其他值表示失败
+ * @return bool true表示成功，false表示失败
  */
-esp_err_t displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int displayX, int displayY, bool clearArea = true);
+bool displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int displayX, int displayY, bool clearArea = true);
 
 /**
  * @brief 显示菜单界面，包含Auto Enroll和Auto Identify两个选项
@@ -39,9 +39,9 @@ esp_err_t displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& ca
  * @param canvas 画布对象引用
  * @param displayX 显示位置X坐标
  * @param displayY 显示位置Y坐标
- * @return esp_err_t ESP_OK表示成功，其他值表示失败
+ * @return bool true表示成功，false表示失败
  */
-esp_err_t displayMenu(M5Canvas& canvas, int displayX, int displayY);
+bool displayMenu(M5Canvas& canvas, int displayX, int displayY);
 
 /**
  * @brief 初始化指纹传感器并执行基本检查

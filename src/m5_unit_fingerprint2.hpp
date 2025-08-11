@@ -18,14 +18,7 @@
 #include <freertos/queue.h>
 #endif
 
-#if defined(CONFIG_IDF_TARGET_ESP32)
-#include "driver/uart.h"
-#include "driver/gpio.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
-#endif
+
 
 class Fingerprint_Packet {
 public:
@@ -260,18 +253,7 @@ public:
      */
     M5UnitFingerprint2(uint32_t password = 0x00000000, uint32_t address = 0xFFFFFFFF, HardwareSerial* serialPort = nullptr, int txPin = -1, int rxPin = -1);
 
-    /**
-     * @brief Constructs a new M5UnitFingerprint2 object for ESP-IDF.
-     *
-     * This constructor initializes the M5UnitFingerprint2 instance for ESP-IDF platform.
-     * Creates mutex lock for thread-safe operations and configures UART communication.
-     * @param password The password for the fingerprint module (default: 0x00000000).
-     * @param address The address for the fingerprint module (default: 0xFFFFFFFF).
-     * @param uartNum The UART port number to use for communication (default: -1).
-     * @param txPin The TX pin number for UART communication (default: -1, use default pin).
-     * @param rxPin The RX pin number for UART communication (default: -1, use default pin).
-     */
-    // M5UnitFingerprint2(uint32_t password = 0x00000000, uint32_t address = 0xFFFFFFFF, int uartNum = -1, int txPin = -1, int rxPin = -1);
+
 
     ~M5UnitFingerprint2();
 
@@ -284,7 +266,6 @@ public:
      * background tasks for packet parsing on ESP32/ESP8266 platforms.
      * 
      * For Arduino platforms: Initializes HardwareSerial with specified or default pins.
-     * For ESP-IDF platforms: Configures UART driver and creates event handling tasks.
      * 
      * @return true if initialization succeeded, false if any step failed.
      * @note This function should be called before any other operations on the module.
@@ -294,7 +275,7 @@ public:
     /**
      * @brief Reads data from the serial port.
      *
-     * This function reads data from the configured serial port (Arduino HardwareSerial or ESP-IDF UART)
+     * This function reads data from the configured serial port (Arduino HardwareSerial)
      * and stores it in the provided buffer. The function is platform-aware and uses the appropriate
      * serial interface based on the platform configuration.
      * @param buffer The buffer to store the read data.
@@ -306,7 +287,7 @@ public:
     /**
      * @brief Writes data to the serial port.
      *
-     * This function writes data to the configured serial port (Arduino HardwareSerial or ESP-IDF UART).
+     * This function writes data to the configured serial port (Arduino HardwareSerial).
      * The function is platform-aware and uses the appropriate serial interface based on the platform configuration.
      * @param buffer The buffer containing the data to write.
      * @param length The number of bytes to write.
@@ -391,9 +372,6 @@ private:
     // 串口对象 (Arduino)
     HardwareSerial* _serialPort = nullptr;
 
-    // UART编号 (ESP-IDF)
-    int _uartNum = -1;
-
     // 默认密码和地址
     uint32_t _fp2_password = 0x00000000;
     uint32_t _fp2_address = 0xFFFFFFFF;
@@ -434,15 +412,7 @@ private:
     static TaskHandle_t parseTaskHandle;
 
     /** 队列相关方法 */
-    static void uartEventTask(void* parameter);
     static void parseDataTask(void* parameter);
-
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32)
-    /** ESP-IDF UART配置 */
-    void configureUart();
-    static void uart_isr_handler(void* arg);
 #endif
 
     /**
@@ -547,7 +517,7 @@ private:
      * @brief Sends a packet through the serial interface.
      * 
      * This function serializes a Fingerprint_Packet object and transmits it via the
-     * configured serial port (Arduino HardwareSerial or ESP-IDF UART). Includes
+     * configured serial port (Arduino HardwareSerial). Includes
      * debug output when enabled and mutex protection for thread safety.
      * 
      * @param packet The Fingerprint_Packet object to send.

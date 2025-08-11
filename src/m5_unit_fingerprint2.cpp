@@ -39,25 +39,12 @@ M5UnitFingerprint2::M5UnitFingerprint2(uint32_t password, uint32_t address, Hard
                                        int rxPin)
 {
     _serialPort   = serialPort;
-    _uartNum      = -1;  // Arduino版本不使用UART编号
     _fp2_password = password;
     _fp2_address  = address;
     _txPin        = txPin;
     _rxPin        = rxPin;
     instance      = this;
 }
-
-// 构造函数 - ESP-IDF 版本
-// M5UnitFingerprint2::M5UnitFingerprint2(uint32_t password, uint32_t address, int uartNum, int txPin, int rxPin)
-// {
-//     _serialPort   = nullptr;  // ESP-IDF版本不使用HardwareSerial
-//     _uartNum      = uartNum;
-//     _fp2_password = password;
-//     _fp2_address  = address;
-//     _txPin        = txPin;
-//     _rxPin        = rxPin;
-//     instance      = this;
-// }
 
 // 析构函数，ESP 平台上删除互斥锁
 M5UnitFingerprint2::~M5UnitFingerprint2()
@@ -112,12 +99,6 @@ size_t M5UnitFingerprint2::readSerial(uint8_t* buffer, size_t length)
         }
         return bytesRead;
     }
-#elif defined(CONFIG_IDF_TARGET_ESP32)
-    // ESP-IDF 平台
-    if (_uartNum >= 0) {
-        int bytesRead = uart_read_bytes(_uartNum, buffer, length, pdMS_TO_TICKS(100));
-        return (bytesRead > 0) ? bytesRead : 0;
-    }
 #endif
     return 0;
 }
@@ -134,91 +115,9 @@ size_t M5UnitFingerprint2::writeSerial(const uint8_t* buffer, size_t length)
     if (_serialPort != nullptr) {
         return _serialPort->write(buffer, length);
     }
-#elif defined(CONFIG_IDF_TARGET_ESP32)
-    // ESP-IDF 平台
-    if (_uartNum >= 0) {
-        int bytesWritten = uart_write_bytes(_uartNum, (const char*)buffer, length);
-        return (bytesWritten > 0) ? bytesWritten : 0;
-    }
 #endif
     return 0;
 }
-
-#if defined(CONFIG_IDF_TARGET_ESP32)
-// ESP-IDF UART配置
-void M5UnitFingerprint2::configureUart()
-{
-    uart_config_t uart_config = {
-        .baud_rate           = 115200,  // 设置波特率为115200
-        .data_bits           = UART_DATA_8_BITS,
-        .parity              = UART_PARITY_DISABLE,
-        .stop_bits           = UART_STOP_BITS_1,
-        .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
-        .rx_flow_ctrl_thresh = 122,
-    };
-
-    // 检查串口是否已被使用
-    if (uart_is_driver_installed(_uartNum)) {
-        serialPrintln("UART already in use.");
-        return;
-    }
-
-    // 配置UART参数
-    uart_param_config(_uartNum, &uart_config);
-
-    // 设置UART引脚
-    if (_txPin != -1 && _rxPin != -1) {
-        uart_set_pin(_uartNum, _txPin, _rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    } else {
-        serialPrintln("Invalid TX or RX pin configuration.");
-    }
-}
-
-// UART事件处理任务
-void M5UnitFingerprint2::uartEventTask(void* parameter)
-{
-    M5UnitFingerprint2* instance = static_cast<M5UnitFingerprint2*>(parameter);
-    uart_event_t event;
-    uint8_t* buffer = (uint8_t*)malloc(1024);
-
-    while (true) {
-        if (xQueueReceive(instance->dataQueue, &event, pdMS_TO_TICKS(100)) == pdTRUE) {
-            switch (event.type) {
-                case UART_DATA:
-                    if (event.size > 0) {
-                        int len = uart_read_bytes(instance->_uartNum, buffer, event.size, pdMS_TO_TICKS(100));
-                        if (len > 0) {
-                            instance->processReceivedData(buffer, len);
-                        }
-                    }
-                    break;
-                case UART_FIFO_OVF:
-                    serialPrintln("UART FIFO overflow");
-                    uart_flush(instance->_uartNum);
-                    break;
-                case UART_BUFFER_FULL:
-                    serialPrintln("UART buffer full");
-                    uart_flush(instance->_uartNum);
-                    break;
-                case UART_BREAK:
-                    serialPrintln("UART break detected");
-                    break;
-                case UART_PARITY_ERR:
-                    serialPrintln("UART parity error");
-                    break;
-                case UART_FRAME_ERR:
-                    serialPrintln("UART frame error");
-                    break;
-                default:
-                    break;
-            }
-        }
-        vTaskDelay(pdMS_TO_TICKS(1));
-    }
-
-    free(buffer);
-}
-#endif
 
 #if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
 // Arduino平台数据解析任务 - 使用中断方式接收
@@ -719,42 +618,6 @@ bool M5UnitFingerprint2::begin()
     // 释放互斥锁
     releaseMutex();
 
-#elif defined(CONFIG_IDF_TARGET_ESP32)
-    // ESP-IDF 平台
-    if (_uartNum >= 0) {
-        configureUart();
-        serialPrintln("ESP-IDF UART configured.");
-
-        // 创建互斥锁
-        if (mutexLock == NULL) {
-            mutexLock = xSemaphoreCreateMutex();
-            if (mutexLock == NULL) {
-                serialPrintln("Failed to create mutex lock.");
-                return false;
-            }
-        }
-
-        // 创建数据队列
-        if (dataQueue == nullptr) {
-            dataQueue = xQueueCreate(10, sizeof(uart_event_t));
-            if (dataQueue == nullptr) {
-                serialPrintln("Failed to create UART event queue.");
-                return false;
-            }
-        }
-
-        // 安装UART驱动
-        uart_driver_install(_uartNum, 1024, 1024, 10, &dataQueue, 0);
-
-        // 创建UART事件处理任务
-        if (parseTaskHandle == nullptr) {
-            xTaskCreate(uartEventTask, "UARTEventTask", 4096, this, 1, &parseTaskHandle);
-            if (parseTaskHandle == nullptr) {
-                serialPrintln("Failed to create UART event task.");
-                return false;
-            }
-        }
-    }
 #endif
 
     serialPrintln("M5UnitFingerprint2 initialized successfully.");

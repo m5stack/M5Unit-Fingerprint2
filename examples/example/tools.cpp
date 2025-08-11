@@ -8,7 +8,7 @@ bool fingerDetectionEnabled            = true;  // 指纹检测线程是否启�
 bool touchDetectionEnabled             = true;  // 触摸检测是否启用
 int fingerPresentCount                 = 0;     // 手指存在的连续计数
 
-esp_err_t displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBufferSize, M5Canvas& canvas,
+bool displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBufferSize, M5Canvas& canvas,
                                   int displayX, int displayY, uint8_t rotation)
 {
     // 获取指纹图像
@@ -16,16 +16,16 @@ esp_err_t displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t max
         Serial.println("Failed to get fingerprint image.");
         canvas.setCursor(2, 60);
         canvas.printf("Failed to get image");
-        return ESP_FAIL;
+        return false;
     }
 
     // 分配内存
-    uint8_t* imageBuffer = (uint8_t*)heap_caps_malloc(maxBufferSize, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    uint8_t* imageBuffer = (uint8_t*)malloc(maxBufferSize);
     if (imageBuffer == nullptr) {
         Serial.println("Failed to allocate memory for image buffer.");
         canvas.setCursor(2, 60);
         canvas.printf("Memory allocation failed");
-        return ESP_ERR_NO_MEM;
+        return false;
     }
 
     // 上传图像
@@ -100,7 +100,7 @@ esp_err_t displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t max
 
         // 释放内存
         free(imageBuffer);
-        return ESP_OK;
+        return true;
 
     } else {
         Serial.println("Failed to upload image.");
@@ -109,11 +109,11 @@ esp_err_t displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t max
 
         // 释放内存
         free(imageBuffer);
-        return ESP_FAIL;
+        return false;
     }
 }
 
-esp_err_t displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int displayX, int displayY,
+bool displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int displayX, int displayY,
                                   bool clearArea)
 {
     // 读取系统参数
@@ -124,7 +124,7 @@ esp_err_t displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& ca
         Serial.println("Failed to read system parameters.");
         canvas.setCursor(displayX, displayY);
         canvas.printf("Failed to read sys params");
-        return ESP_FAIL;
+        return false;
     }
 
     // 如果需要清除显示区域
@@ -182,10 +182,10 @@ esp_err_t displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& ca
     canvas.printf("Baud Rate: %d bps", sysParams.baud_rate * 9600);
 
     Serial.println("System parameters displayed successfully.");
-    return ESP_OK;
+    return true;
 }
 
-esp_err_t displayMenu(M5Canvas& canvas, int displayX, int displayY)
+bool displayMenu(M5Canvas& canvas, int displayX, int displayY)
 {
     // 清除显示区域
     canvas.fillRect(displayX, displayY, 320, 240, 0x0000);
@@ -264,7 +264,7 @@ esp_err_t displayMenu(M5Canvas& canvas, int displayX, int displayY)
         topLeftX, topLeftY, topRightX, topRightY, bottomLeftX, bottomLeftY, bottomRightX, bottomRightY, boxWidth,
         boxHeight);
 
-    return ESP_OK;
+    return true;
 }
 
 bool initializeFingerprintSensor(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int maxRetries, int retryDelay)
@@ -678,7 +678,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                 canvas.pushSprite(0, 0);                   // 刷新画布
 
                 // Serial.println("=== Demo: Upload Template Auto (Automatic) ===");
-                uint8_t* templateBuffer = (uint8_t*)heap_caps_malloc(16384, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+                uint8_t* templateBuffer = (uint8_t*)malloc(16384);
                 if (templateBuffer != nullptr) {
                     uint32_t totalSize = 0;  // 实际接收的总大小
 
@@ -803,7 +803,7 @@ void fingerDetectionTask(void* parameter)
                 touchDetectionEnabled = false;
 
                 // 进入指纹图像显示
-                if (displayFingerprintImage(*fingerprint2, 1024 * 16, *canvas, 56, 100, 1) == ESP_OK) {
+                if (displayFingerprintImage(*fingerprint2, 1024 * 16, *canvas, 56, 100, 1)) {
                     Serial.println("Fingerprint image displayed successfully.");
                 } else {
                     Serial.println("Failed to display fingerprint image.");
