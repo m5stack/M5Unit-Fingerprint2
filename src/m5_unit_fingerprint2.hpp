@@ -250,53 +250,67 @@ public:
     /**
      * @brief Constructs a new M5UnitFingerprint2 object for Arduino.
      *
-     * This constructor initializes the M5UnitFingerprint2 instance and creates a mutex lock
-     * for thread-safe operations on ESP32 or ESP8266 platforms.
-     * @param serialPort The serial port to use for communication.
-     * @param password The password for the fingerprint module.
-     * @param address The address for the fingerprint module.
+     * This constructor initializes the M5UnitFingerprint2 instance for Arduino platforms.
+     * Creates mutex lock for thread-safe operations on ESP32 or ESP8266 platforms.
+     * @param password The password for the fingerprint module (default: 0x00000000).
+     * @param address The address for the fingerprint module (default: 0xFFFFFFFF).
+     * @param serialPort The HardwareSerial port to use for communication (default: nullptr).
+     * @param txPin The TX pin number for serial communication (default: -1, use default pin).
+     * @param rxPin The RX pin number for serial communication (default: -1, use default pin).
      */
     M5UnitFingerprint2(uint32_t password = 0x00000000, uint32_t address = 0xFFFFFFFF, HardwareSerial* serialPort = nullptr, int txPin = -1, int rxPin = -1);
 
     /**
      * @brief Constructs a new M5UnitFingerprint2 object for ESP-IDF.
      *
-     * This constructor initializes the M5UnitFingerprint2 instance and creates a mutex lock
-     * for thread-safe operations on ESP32 or ESP8266 platforms.
-     * @param uartNum The UART number to use for communication.
-     * @param password The password for the fingerprint module.
-     * @param address The address for the fingerprint module.
+     * This constructor initializes the M5UnitFingerprint2 instance for ESP-IDF platform.
+     * Creates mutex lock for thread-safe operations and configures UART communication.
+     * @param password The password for the fingerprint module (default: 0x00000000).
+     * @param address The address for the fingerprint module (default: 0xFFFFFFFF).
+     * @param uartNum The UART port number to use for communication (default: -1).
+     * @param txPin The TX pin number for UART communication (default: -1, use default pin).
+     * @param rxPin The RX pin number for UART communication (default: -1, use default pin).
      */
-    M5UnitFingerprint2(uint32_t password = 0x00000000, uint32_t address = 0xFFFFFFFF, int uartNum = -1, int txPin = -1, int rxPin = -1);
+    // M5UnitFingerprint2(uint32_t password = 0x00000000, uint32_t address = 0xFFFFFFFF, int uartNum = -1, int txPin = -1, int rxPin = -1);
 
     ~M5UnitFingerprint2();
 
     /**
-     * @brief Initializes the module.
+     * @brief Initializes the M5UnitFingerprint2 module.
      *
-     * This function initializes the M5UnitFingerprint2 module, setting up necessary configurations
-     * and preparing it for use. It should be called before any other operations on the module.
-     * 初始化模块，设置必要的配置并准备使用
+     * This function initializes the M5UnitFingerprint2 module by setting up the serial communication,
+     * creating necessary tasks and queues for data processing, and configuring mutex locks for 
+     * thread-safe operations. It configures the serial port at 115200 baud rate and creates
+     * background tasks for packet parsing on ESP32/ESP8266 platforms.
+     * 
+     * For Arduino platforms: Initializes HardwareSerial with specified or default pins.
+     * For ESP-IDF platforms: Configures UART driver and creates event handling tasks.
+     * 
+     * @return true if initialization succeeded, false if any step failed.
+     * @note This function should be called before any other operations on the module.
      */
     bool begin();
 
     /**
      * @brief Reads data from the serial port.
      *
-     * This function reads data from the serial port and returns it as a byte array.
+     * This function reads data from the configured serial port (Arduino HardwareSerial or ESP-IDF UART)
+     * and stores it in the provided buffer. The function is platform-aware and uses the appropriate
+     * serial interface based on the platform configuration.
      * @param buffer The buffer to store the read data.
-     * @param length The number of bytes to read.
-     * @return The number of bytes actually read.
+     * @param length The maximum number of bytes to read.
+     * @return The number of bytes actually read (0 if no data available or error).
      */
     size_t readSerial(uint8_t* buffer, size_t length);
 
     /**
      * @brief Writes data to the serial port.
      *
-     * This function writes data to the serial port.
+     * This function writes data to the configured serial port (Arduino HardwareSerial or ESP-IDF UART).
+     * The function is platform-aware and uses the appropriate serial interface based on the platform configuration.
      * @param buffer The buffer containing the data to write.
      * @param length The number of bytes to write.
-     * @return The number of bytes actually written.
+     * @return The number of bytes actually written (0 if error occurred).
      */
     size_t writeSerial(const uint8_t* buffer, size_t length);
 
@@ -431,35 +445,127 @@ private:
     static void uart_isr_handler(void* arg);
 #endif
 
-    /** 获取互斥锁 */
+    /**
+     * @brief Acquires the mutex lock for thread-safe operations.
+     * 
+     * This function acquires the FreeRTOS mutex lock to ensure thread-safe access to shared resources.
+     * Creates the mutex if it doesn't exist. Blocks until the lock is acquired.
+     * Only effective on ESP32/ESP8266 platforms with FreeRTOS support.
+     */
     void acquireMutex();
-    /** 释放互斥锁 */
+
+    /**
+     * @brief Releases the mutex lock.
+     * 
+     * This function releases the previously acquired FreeRTOS mutex lock, allowing other tasks
+     * to access the shared resources. Should be called after acquireMutex() and corresponding operations.
+     * Only effective on ESP32/ESP8266 platforms with FreeRTOS support.
+     */
     void releaseMutex();
     
-    /** 串口数据处理 */
+    /**
+     * @brief Processes received serial data and adds it to the receive buffer.
+     * 
+     * This function handles incoming serial data by adding it to the internal receive buffer,
+     * updating timestamps for packet interval detection, and setting flags for packet parsing.
+     * Includes debug output when enabled and handles buffer overflow protection.
+     * 
+     * @param data Pointer to the received data buffer.
+     * @param length Number of bytes received.
+     */
     void processReceivedData(uint8_t* data, size_t length);
     
-    /** 检查是否可以开始解析数据包（基于包间隔） */
+    /**
+     * @brief Checks for packet interval timeout and parses complete packets.
+     * 
+     * This function implements packet interval-based parsing by checking if enough time has passed
+     * since the last data reception. When the interval timeout is reached, it attempts to parse
+     * all complete packets from the receive buffer and adds them to the parsed packet queue.
+     * Also handles response matching for waiting operations.
+     */
     void checkAndParsePackets();
     
-    /** 从缓冲区中精确解析单个数据包 */
+    /**
+     * @brief Extracts a single complete packet from the buffer.
+     * 
+     * This function precisely parses one complete fingerprint packet from the given buffer,
+     * validating the start code, packet structure, checksum, and address. Returns the exact
+     * packet length if a valid packet is found.
+     * 
+     * @param buffer Pointer to the data buffer to parse.
+     * @param bufferSize Size of the data buffer.
+     * @param packetLength Reference to store the length of the extracted packet.
+     * @return true if a valid packet was extracted, false otherwise.
+     */
     bool extractSinglePacket(uint8_t* buffer, size_t bufferSize, size_t& packetLength);
     
-    /** 将解析好的包添加到解析队列 */
+    /**
+     * @brief Adds a parsed packet to the internal packet queue.
+     * 
+     * This function adds a complete, validated packet to the internal queue for later retrieval.
+     * Manages queue overflow by removing the oldest packet when the queue is full.
+     * Each packet is timestamped for expiration tracking.
+     * 
+     * @param packetData Pointer to the complete packet data.
+     * @param packetLength Length of the packet data.
+     */
     void addParsedPacket(const uint8_t* packetData, size_t packetLength);
     
-    /** 从解析队列中获取匹配的包 */
+    /**
+     * @brief Retrieves a matching packet from the parsed packet queue.
+     * 
+     * This function searches the internal packet queue for a packet matching the expected
+     * criteria (typically ACK, DATA, or END_DATA packets). When found, constructs a
+     * Fingerprint_Packet object and removes the packet from the queue.
+     * 
+     * @param packet Reference to a Fingerprint_Packet object to store the found packet.
+     * @return true if a matching packet was found and retrieved, false otherwise.
+     */
     bool getMatchingPacket(Fingerprint_Packet& packet);
     
-    /** 清理过期的解析包 */
+    /**
+     * @brief Removes expired packets from the internal queue.
+     * 
+     * This function performs housekeeping by removing packets that have exceeded the
+     * timeout threshold (typically 5 seconds) from the internal packet queue.
+     * Prevents memory leaks and ensures the queue doesn't grow indefinitely.
+     */
     void cleanupExpiredPackets();
     
-    /** 尝试解析完整的数据包 */
+    /**
+     * @brief Legacy packet parsing method (simplified version).
+     * 
+     * This function provides a simpler packet parsing approach for compatibility.
+     * Searches for start codes, validates packet structure, and constructs response packets.
+     * Less robust than the interval-based parsing but useful for fallback scenarios.
+     * 
+     * @return true if a complete packet was parsed successfully, false otherwise.
+     */
     bool tryParsePacket();
     
-    /** 发送数据包 */
+    /**
+     * @brief Sends a packet through the serial interface.
+     * 
+     * This function serializes a Fingerprint_Packet object and transmits it via the
+     * configured serial port (Arduino HardwareSerial or ESP-IDF UART). Includes
+     * debug output when enabled and mutex protection for thread safety.
+     * 
+     * @param packet The Fingerprint_Packet object to send.
+     * @return true if the packet was sent successfully, false otherwise.
+     */
     bool sendPacketData(const Fingerprint_Packet& packet);
-    /** 接收数据包 */
+
+    /**
+     * @brief Receives a packet from the serial interface with timeout.
+     * 
+     * This function waits for a response packet using the parsed packet queue mechanism.
+     * On FreeRTOS platforms, uses semaphores for efficient waiting. On other platforms,
+     * uses polling with the specified timeout. Handles response matching and cleanup.
+     * 
+     * @param packet Reference to a Fingerprint_Packet object to store the received packet.
+     * @param timeout_ms Timeout in milliseconds to wait for the packet (default: 1000ms).
+     * @return true if a packet was received within the timeout, false otherwise.
+     */
     bool receivePacketData(Fingerprint_Packet& packet, uint32_t timeout_ms = 1000);
 };
 

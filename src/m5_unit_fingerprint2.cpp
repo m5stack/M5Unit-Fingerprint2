@@ -48,16 +48,16 @@ M5UnitFingerprint2::M5UnitFingerprint2(uint32_t password, uint32_t address, Hard
 }
 
 // 构造函数 - ESP-IDF 版本
-M5UnitFingerprint2::M5UnitFingerprint2(uint32_t password, uint32_t address, int uartNum, int txPin, int rxPin)
-{
-    _serialPort   = nullptr;  // ESP-IDF版本不使用HardwareSerial
-    _uartNum      = uartNum;
-    _fp2_password = password;
-    _fp2_address  = address;
-    _txPin        = txPin;
-    _rxPin        = rxPin;
-    instance      = this;
-}
+// M5UnitFingerprint2::M5UnitFingerprint2(uint32_t password, uint32_t address, int uartNum, int txPin, int rxPin)
+// {
+//     _serialPort   = nullptr;  // ESP-IDF版本不使用HardwareSerial
+//     _uartNum      = uartNum;
+//     _fp2_password = password;
+//     _fp2_address  = address;
+//     _txPin        = txPin;
+//     _rxPin        = rxPin;
+//     instance      = this;
+// }
 
 // 析构函数，ESP 平台上删除互斥锁
 M5UnitFingerprint2::~M5UnitFingerprint2()
