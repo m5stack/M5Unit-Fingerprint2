@@ -1,4 +1,4 @@
-# STP2 demo 使用教程
+# Fingerprint2 demo 使用教程
 
 ## 该demo只适用于M5Stack CoreS3/-SE/-Lite
 
