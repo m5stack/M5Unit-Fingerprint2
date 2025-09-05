@@ -638,7 +638,12 @@ fingerprint_status_t M5UnitFingerprint2::PS_WriteReg(fingerprint_register_id_t R
 
     // 准备命令参数
     uint8_t params[2];
-    params[0] = static_cast<uint8_t>(RegID);  // 寄存器枚举转换为uint8_t
+    // RegID特殊转换：当RegID大于9时，转换为十进制表示（10->0x10, 11->0x11, etc.）
+    if (RegID > 9) {
+        params[0] = 0x10 + (RegID - 10);  // 10->0x10, 11->0x11, 12->0x12, 13->0x13
+    } else {
+        params[0] = static_cast<uint8_t>(RegID);  // 0-9直接转换
+    }
     params[1] = Value;                        // 寄存器数据值
 
     // 创建命令数据包
@@ -675,8 +680,11 @@ fingerprint_status_t M5UnitFingerprint2::PS_WriteReg(fingerprint_register_id_t R
     const uint8_t* responseData = responsePacket.get_data();
     uint8_t confirmationCode    = responseData[0];
 
-    serialPrintf("Write register result: %s [RegID: %d, Value: 0x%02X, confirmation: %s]\r\n",
-                 (confirmationCode == FINGERPRINT_OK) ? "Success" : "Failed", static_cast<uint8_t>(RegID), Value,
+    // 计算实际发送的RegID值（用于调试输出）
+    uint8_t actualRegIDValue = (RegID > 9) ? (0x10 + (RegID - 10)) : static_cast<uint8_t>(RegID);
+    
+    serialPrintf("Write register result: %s [RegID: %d->0x%02X, Value: 0x%02X, confirmation: %s]\r\n",
+                 (confirmationCode == FINGERPRINT_OK) ? "Success" : "Failed", static_cast<uint8_t>(RegID), actualRegIDValue, Value,
                  FingerprintDebugUtils::getStatusName(confirmationCode).c_str());
 
     return static_cast<fingerprint_status_t>(confirmationCode);
