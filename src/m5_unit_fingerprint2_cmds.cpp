@@ -975,8 +975,8 @@ fingerprint_status_t M5UnitFingerprint2::PS_WriteNotepad(uint8_t NotepadID, cons
         return FINGERPRINT_PACKET_OVERFLOW;
     }
     
-    if (NotepadID > 3) {
-        serialPrintf("Invalid NotepadID for PS_WriteNotepad: %d (valid range: 0-3)\r\n", NotepadID);
+    if (NotepadID > 7) {
+        serialPrintf("Invalid NotepadID for PS_WriteNotepad: %d (valid range: 0-7)\r\n", NotepadID);
         return FINGERPRINT_PACKET_OVERFLOW;
     }
     
@@ -1045,8 +1045,8 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadNotepad(uint8_t NotepadID, uint8
         return FINGERPRINT_PACKET_OVERFLOW;
     }
     
-    if (NotepadID > 3) {
-        serialPrintf("Invalid NotepadID for PS_ReadNotepad: %d (valid range: 0-3)\r\n", NotepadID);
+    if (NotepadID > 7) {
+        serialPrintf("Invalid NotepadID for PS_ReadNotepad: %d (valid range: 0-7)\r\n", NotepadID);
         return FINGERPRINT_PACKET_OVERFLOW;
     }
 

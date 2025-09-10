@@ -331,7 +331,7 @@ public:
     fingerprint_status_t PS_ReadIndexTable(uint8_t* IndexTableData) const; 
     fingerprint_status_t PS_GetChipSN(uint8_t* ChipSN) const;                          // 34H 获取芯片序列号 返回：32字节芯片序列号
     fingerprint_status_t PS_HandShake(void) const;                                     // 35H 握手指令
-    fingerprint_status_t PS_CheckSensor(void) const;                                    // 36H 校验传感器
+    fingerprint_status_t PS_CheckSensor(void) const;                                   // 36H 校验传感器
     // ↓ 3CH LED 控制灯指令 输入：功能码，起始颜色（仅限于普通呼吸灯），结束颜色，循环次数（仅适用于呼吸、闪烁）
     fingerprint_status_t PS_ControlBLN(fingerprint_led_control_mode_t mode, fingerprint_led_color_t startColor, fingerprint_led_color_t endColor, uint8_t loopCount = 0) const;
     // ↓ 3DH 获取图像信息指令 输入：返回图像面积（百分比），图像质量（0:合格，其他：不合格）
