@@ -327,8 +327,8 @@ public:
     fingerprint_status_t PS_WriteNotepad(uint8_t NotepadID, const uint8_t* NotepadData, uint16_t NotepadLength) const;
     fingerprint_status_t PS_ReadNotepad(uint8_t NotepadID, uint8_t* NotepadData) const; // 19H 读记事本 输入：NotepadID 便笺号 0-3，NotepadData 便笺数据(返回32字节数据)
     fingerprint_status_t PS_ValidTempleteNum(uint16_t &ValidNum) const;                 // 1DH 有效模板数量 返回：有效模板数量
-    // ↓ 1FH 读取索引表 输入：IndexTableID:索引表号 0-1，IndexTableData:索引表数据(返回32字节数据),每1bit代表一个模板的状态 1:已录入 0:未录入 ，总共512bit
-    fingerprint_status_t PS_ReadIndexTable(uint8_t IndexTableID, uint8_t* IndexTableData) const; 
+    // ↓ 1FH 读取索引表 返回：IndexTableData:索引表数据(返回32字节数据),每1bit代表一个模板的状态 1:已录入 0:未录入 ，只有前100位有效
+    fingerprint_status_t PS_ReadIndexTable(uint8_t* IndexTableData) const; 
     fingerprint_status_t PS_GetChipSN(uint8_t* ChipSN) const;                          // 34H 获取芯片序列号 返回：32字节芯片序列号
     fingerprint_status_t PS_HandShake(void) const;                                     // 35H 握手指令
     fingerprint_status_t PS_CheckSensor(void) const;                                    // 36H 校验传感器

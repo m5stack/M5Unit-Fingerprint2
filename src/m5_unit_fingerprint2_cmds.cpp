@@ -1168,18 +1168,16 @@ fingerprint_status_t M5UnitFingerprint2::PS_ValidTempleteNum(uint16_t &ValidNum)
 }
 
 // 读索引表 - 读取指纹库索引表，每1bit代表一个模板的状态
-fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t IndexTableID, uint8_t* IndexTableData) const
+fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t* IndexTableData) const
 {
     // 参数检查
     if (IndexTableData == nullptr) {
         serialPrintln("Invalid parameter for PS_ReadIndexTable: IndexTableData is null");
         return FINGERPRINT_PACKET_OVERFLOW;
     }
-    
-    if (IndexTableID > 1) {
-        serialPrintf("Invalid IndexTableID for PS_ReadIndexTable: %d (valid range: 0-1)\r\n", IndexTableID);
-        return FINGERPRINT_PACKET_OVERFLOW;
-    }
+
+    // IndexTableID 固定为0
+    uint8_t IndexTableID = 0;
 
     // 准备命令参数：索引表号(1字节)
     uint8_t commandParams[1] = {IndexTableID};
@@ -1222,32 +1220,44 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t IndexTableID,
     if (confirmationCode == FINGERPRINT_OK) {
         memcpy(IndexTableData, &responseData[1], 32);
         
-        serialPrintf("Read index table successful: IndexTableID: %d\r\n", IndexTableID);
+        // 清零第100位后面的数据（从第100位开始，即第12字节的第4位开始）
+        // 第100位是第12字节（索引11）的第4位（从高位开始计算）
+        // 100位 = 12字节 + 4位，所以第12字节需要保留高4位，清零低4位
+        IndexTableData[12] &= 0xF0;  // 保留高4位，清零低4位
         
-        // 计算模板范围
-        uint16_t startTemplate = IndexTableID * 256;
-        uint16_t endTemplate = startTemplate + 255;
+        // 清零第13-31字节（索引13-31）
+        for (int i = 13; i < 32; i++) {
+            IndexTableData[i] = 0;
+        }
         
-        serialPrintf("Template range: %d-%d (IndexTableID: %d)\r\n", startTemplate, endTemplate, IndexTableID);
+        serialPrintf("Read index table successful: IndexTableID: %d (fixed)\r\n", IndexTableID);
+        
+        // 计算模板范围（固定为0-99，只有100个有效位）
+        uint16_t startTemplate = 0;
+        uint16_t endTemplate = 99;
+        
+        serialPrintf("Template range: %d-%d (only 100 templates supported)\r\n", startTemplate, endTemplate);
         serialPrintln("Index table (1=enrolled, 0=empty):");
         
-        // 每行显示64位，总共32字节=256位，需要4行
-        for (int row = 0; row < 4; row++) {
-            uint16_t rowStartTemplate = startTemplate + (row * 64);
-            serialPrintf("Templates %03d-%03d: ", rowStartTemplate, rowStartTemplate + 63);
+        // 显示有效的100位数据
+        // 每行显示20位，共5行显示100位
+        for (int row = 0; row < 5; row++) {
+            uint16_t rowStartTemplate = row * 20;
+            uint16_t rowEndTemplate = rowStartTemplate + 19;
+            if (rowEndTemplate > 99) rowEndTemplate = 99;
             
-            // 每行显示8个字节 = 64位
-            for (int byteIdx = 0; byteIdx < 8; byteIdx++) {
-                int globalByteIdx = row * 8 + byteIdx;
-                uint8_t currentByte = IndexTableData[globalByteIdx];
+            serialPrintf("Templates %02d-%02d: ", rowStartTemplate, rowEndTemplate);
+            
+            // 每行显示20位
+            for (int bit = 0; bit < 20 && (row * 20 + bit) < 100; bit++) {
+                int globalBitIndex = row * 20 + bit;
+                int byteIndex = globalBitIndex / 8;
+                int bitIndex = 7 - (globalBitIndex % 8);  // 从最高位开始
                 
-                // 从最高位到最低位显示
-                for (int bit = 7; bit >= 0; bit--) {
-                    M5_MODULE_DEBUG_SERIAL.print((currentByte & (1 << bit)) ? "1" : "0");
-                }
+                M5_MODULE_DEBUG_SERIAL.print((IndexTableData[byteIndex] & (1 << bitIndex)) ? "1" : "0");
                 
-                // 每8位后加一个空格，方便阅读
-                if (byteIdx < 7) {
+                // 每5位加一个空格，方便阅读
+                if ((bit + 1) % 5 == 0 && bit < 19) {
                     M5_MODULE_DEBUG_SERIAL.print(" ");
                 }
             }
@@ -1256,10 +1266,9 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t IndexTableID,
         
     }
 
-    serialPrintf("Read index table result: %s [confirmation: %s] IndexTableID: %d\r\n",
+    serialPrintf("Read index table result: %s [confirmation: %s] (IndexTableID fixed to 0)\r\n",
                  (confirmationCode == FINGERPRINT_OK) ? "Success" : "Failed",
-                 FingerprintDebugUtils::getStatusName(confirmationCode).c_str(),
-                 IndexTableID);
+                 FingerprintDebugUtils::getStatusName(confirmationCode).c_str());
 
     return static_cast<fingerprint_status_t>(confirmationCode);
 }

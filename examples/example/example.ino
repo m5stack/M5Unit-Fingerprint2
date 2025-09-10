@@ -126,15 +126,10 @@ void setup() {
   //   Serial.println("Failed to get valid template count.");
   // }
 
-  // uint8_t indexTableData_1[32] = {0}; // 创建一个32字节的缓冲区来存储索引表数据
-  // fingerprint2.PS_ReadIndexTable(0, indexTableData_1) == FINGERPRINT_OK ? 
-  //   Serial.println("Index table 0 read successfully.") :
-  //   Serial.println("Failed to read index table 0.");
-  
-  // uint8_t indexTableData_2[32] = {0}; // 创建一个32字节的缓冲区来存储索引表数据
-  // fingerprint2.PS_ReadIndexTable(1, indexTableData_2) == FINGERPRINT_OK ? 
-  //   Serial.println("Index table 1 read successfully.") :
-  //   Serial.println("Failed to read index table 1.");
+  // uint8_t indexTableData[32] = {0}; // 创建一个32字节的缓冲区来存储索引表数据
+  // fingerprint2.PS_ReadIndexTable(indexTableData) == FINGERPRINT_OK ? 
+  //   Serial.println("Index table read successfully.") :
+  //   Serial.println("Failed to read index table.");
 
   // fingerprint2.PS_ControlBLN(FINGERPRINT_LED_BREATHING, FINGERPRINT_LED_COLOR_BLUE, FINGERPRINT_LED_COLOR_BLUE, 0) == FINGERPRINT_OK ? 
   //   Serial.println("LED control command sent successfully.") :

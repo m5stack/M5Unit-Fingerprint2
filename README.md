@@ -593,14 +593,12 @@ void setup() {
 }
 
 void manageFingerprints() {
-    // 读取索引表，了解哪些位置已被占用
-    uint8_t indexTable0[32] = {0};
-    uint8_t indexTable1[32] = {0};
+    // 读取索引表，了解哪些位置已被占用（只有前100位有效）
+    uint8_t indexTable[32] = {0};
   
-    if (fingerprint2.PS_ReadIndexTable(0, indexTable0) == FINGERPRINT_OK &&
-        fingerprint2.PS_ReadIndexTable(1, indexTable1) == FINGERPRINT_OK) {
+    if (fingerprint2.PS_ReadIndexTable(indexTable) == FINGERPRINT_OK) {
   
-        Serial.println("指纹库占用情况:");
+        Serial.println("指纹库占用情况 (只显示前100个位置):");
         // 解析索引表（每1bit代表一个模板的状态）
         for (int i = 0; i < 32; i++) {
             for (int j = 0; j < 8; j++) {
