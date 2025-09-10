@@ -1252,7 +1252,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t* IndexTableDa
             for (int bit = 0; bit < 20 && (row * 20 + bit) < 100; bit++) {
                 int globalBitIndex = row * 20 + bit;
                 int byteIndex = globalBitIndex / 8;
-                int bitIndex = 7 - (globalBitIndex % 8);  // 从最高位开始
+                int bitIndex = globalBitIndex % 8;  // 从最低位开始
                 
                 M5_MODULE_DEBUG_SERIAL.print((IndexTableData[byteIndex] & (1 << bitIndex)) ? "1" : "0");
                 
