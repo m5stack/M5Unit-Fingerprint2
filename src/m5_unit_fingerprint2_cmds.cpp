@@ -2095,6 +2095,12 @@ fingerprint_status_t M5UnitFingerprint2::PS_AutoEnroll(uint16_t ID,
         return FINGERPRINT_PARAM_ERROR;
     }
 
+    // 添加ID范围检查 (0-99)
+    if (ID > 99) {
+        serialPrintf("Invalid ID for PS_AutoEnroll: %d (valid range: 0-99)\r\n", ID);
+        return FINGERPRINT_PARAM_ERROR;
+    }
+
     // 创建命令参数 - 总共 5 字节 (ID: 2字节, enrollCount: 1字节, flags: 2字节)
     uint8_t params[5];
     params[0] = (ID >> 8) & 0xFF;           // ID 高字节
