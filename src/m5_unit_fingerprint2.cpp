@@ -201,9 +201,15 @@ void M5UnitFingerprint2::checkAndParsePackets()
             
             // 尝试从当前位置提取一个完整的数据包
             if (extractSinglePacket(bufferStart, remainingBytes, packetLength)) {
-                // 成功提取到一个包，添加到解析队列
-                addParsedPacket(bufferStart, packetLength);
-                processedBytes += packetLength;
+                // 检查是否为唤醒包，如果是则调用回调函数而不添加到解析队列
+                if (handleWakeupPacket(bufferStart, packetLength)) {
+                    // 是唤醒包，已经处理完毕，跳过addParsedPacket
+                    processedBytes += packetLength;
+                } else {
+                    // 不是唤醒包，正常添加到解析队列
+                    addParsedPacket(bufferStart, packetLength);
+                    processedBytes += packetLength;
+                }
                 
 // #if defined M5_MODULE_DEBUG_SERIAL
 //                 serialPrintf("Extracted packet: %d bytes, total processed: %d/%d\r\n", 
@@ -777,5 +783,71 @@ bool M5UnitFingerprint2::receivePacketData(Fingerprint_Packet& packet, uint32_t 
     _expectedPacket = nullptr;
     serialPrintln("Timeout waiting for response packet");
     return false;
+#endif
+}
+
+// 设置唤醒回调函数
+void M5UnitFingerprint2::setWakeupCallback(PS_WakeupCallback_t callback)
+{
+    acquireMutex();
+    _wakeupCallback = callback;
+    releaseMutex();
+}
+
+// 获取当前设置的唤醒回调函数
+PS_WakeupCallback_t M5UnitFingerprint2::getWakeupCallback() const
+{
+    return _wakeupCallback;
+}
+
+// 检查是否为唤醒包并处理
+bool M5UnitFingerprint2::handleWakeupPacket(const uint8_t* packetData, size_t packetLength)
+{
+    // 唤醒包的固定格式：EF 01 FF FF FF FF 07 00 03 FF 01 09
+    // 总长度应该是12字节
+    if (packetLength != 12) {
+        return false;
+    }
+    
+    // 检查唤醒包的特征：起始码(EF 01) + 地址(FF FF FF FF) + 包类型(07) + 长度(00 03) + 数据(FF 01) + 校验和(09)
+    const uint8_t wakeupPattern[] = {0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x00, 0x03, 0xFF, 0x01, 0x09};
+    
+    // 逐字节比较
+    for (size_t i = 0; i < 12; i++) {
+        if (packetData[i] != wakeupPattern[i]) {
+            return false;
+        }
+    }
+    
+    // 确认是唤醒包，调用回调函数
+#if defined M5_MODULE_DEBUG_SERIAL
+    serialPrintln("Wakeup packet detected, calling callback function");
+#endif
+    
+    // 如果用户设置了自定义回调，调用用户回调；否则调用默认回调
+    if (_wakeupCallback != nullptr) {
+        _wakeupCallback(packetData, packetLength);
+    } else {
+        defaultWakeupCallback(packetData, packetLength);
+    }
+    
+    return true;
+}
+
+// 默认唤醒回调函数
+void M5UnitFingerprint2::defaultWakeupCallback(const uint8_t* wakeupPacket, size_t packetLength)
+{
+#if defined M5_MODULE_DEBUG_SERIAL
+    serialPrintf("=== WAKEUP PACKET RECEIVED ===\r\n");
+    serialPrintf("Fingerprint module wakeup detected, packet length: %d bytes\r\n", (int)packetLength);
+    serialPrintf("Wakeup packet data: ");
+    for (size_t i = 0; i < packetLength; i++) {
+        M5_MODULE_DEBUG_SERIAL.printf("%02X ", wakeupPacket[i]);
+    }
+    M5_MODULE_DEBUG_SERIAL.println("");
+    serialPrintf("==============================\r\n");
+#else
+    // 如果没有调试串口，仍然可以通过默认串口打印基本信息
+    Serial.println("Fingerprint module wakeup detected!");
 #endif
 }

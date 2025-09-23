@@ -8,6 +8,7 @@
 #define __M5_UINIT_FINGERPRINT2_H
 
 #include "Arduino.h"
+#include <cstring>
 #include "m5_unit_fingerprint2_defs.hpp"
 #include "m5_unit_fingerprint2_debug.hpp"
 
@@ -210,6 +211,9 @@ typedef enum {
     PS_AUTO_IDENTIFY_PARAM_VERIFY        = 0x05, // 已注册指纹比对
 } ps_auto_identify_param_t;
 
+// 唤醒回调函数类型定义
+typedef void (*PS_WakeupCallback_t)(const uint8_t* wakeupPacket, size_t packetLength);
+
 //PS_WriteReg 寄存器序号 枚举类型
 typedef enum : uint8_t {
     FP_REG_DELAY_TIME     = 0x00, // 延迟时间寄存器（DelayTime）
@@ -365,6 +369,24 @@ public:
     fingerprint_status_t PS_AutoIdentify(uint8_t securityLevel, uint16_t ID, fingerprint_auto_verify_flags_t flags,
                                          uint16_t& PageID, PS_AutoIdentifyCallback_t callback = nullptr) const;
 
+    // 唤醒回调函数相关接口
+    /**
+     * @brief 设置唤醒回调函数
+     * 
+     * 用户可以设置自定义的唤醒回调函数，当检测到指纹模块发送的唤醒包时会调用该函数。
+     * 如果没有设置自定义回调函数，将使用默认的日志打印函数。
+     * 
+     * @param callback 唤醒回调函数指针，传入nullptr将使用默认回调
+     */
+    void setWakeupCallback(PS_WakeupCallback_t callback);
+    
+    /**
+     * @brief 获取当前设置的唤醒回调函数
+     * 
+     * @return PS_WakeupCallback_t 当前设置的回调函数指针，nullptr表示使用默认回调
+     */
+    PS_WakeupCallback_t getWakeupCallback() const;
+
 private:
     // 静态实例指针，用于在回调函数中访问类成员
     static M5UnitFingerprint2* instance;
@@ -399,6 +421,9 @@ private:
     ParsedPacket _parsedPackets[MAX_PARSED_PACKETS];
     size_t _parsedPacketIndex = 0; // 当前解析包索引
     size_t _parsedPacketCount = 0; // 已解析包数量
+    
+    // 唤醒回调函数相关
+    PS_WakeupCallback_t _wakeupCallback = nullptr; // 用户设置的唤醒回调函数
 
 #if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
     /** FreeRTOS 互斥锁句柄 */
@@ -501,6 +526,31 @@ private:
      * Prevents memory leaks and ensures the queue doesn't grow indefinitely.
      */
     void cleanupExpiredPackets();
+    
+    /**
+     * @brief Checks if a packet is a wakeup packet and handles it accordingly.
+     * 
+     * This function checks if the given packet matches the wakeup packet format:
+     * EF 01 FF FF FF FF 07 00 03 FF 01 09
+     * If it is a wakeup packet, calls the wakeup callback function instead of 
+     * adding it to the parsed packet queue.
+     * 
+     * @param packetData Pointer to the complete packet data.
+     * @param packetLength Length of the packet data.
+     * @return true if this is a wakeup packet (and callback was called), false otherwise.
+     */
+    bool handleWakeupPacket(const uint8_t* packetData, size_t packetLength);
+    
+    /**
+     * @brief Default wakeup callback function that logs the wakeup event.
+     * 
+     * This function serves as the default callback when no custom callback is set.
+     * It prints debug information about the wakeup packet reception.
+     * 
+     * @param wakeupPacket Pointer to the wakeup packet data.
+     * @param packetLength Length of the wakeup packet.
+     */
+    static void defaultWakeupCallback(const uint8_t* wakeupPacket, size_t packetLength);
     
     /**
      * @brief Legacy packet parsing method (simplified version).

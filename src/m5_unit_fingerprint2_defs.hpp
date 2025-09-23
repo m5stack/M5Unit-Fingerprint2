@@ -11,7 +11,7 @@
 
 #define M5_DEVICE_NAME "M5UnitFingerprint2"
 
-#define M5_MODULE_DEBUG_SERIAL Serial0 // The corresponding serial port must be initialized before use
+// #define M5_MODULE_DEBUG_SERIAL HWCDCSerial // The corresponding serial port must be initialized before use
 // This macro definition can be annotated without sending and receiving data prints
 // Define the serial port you want to use, e.g., Serial1 or Serial2
 // 是否启用原始数据分割打印 printPacketHex

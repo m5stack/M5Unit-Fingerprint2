@@ -5,6 +5,7 @@
  */
 
 #include "m5_unit_fingerprint2.hpp"
+#include <string.h>  // 为了使用 memcpy 和 memset
 
 //指纹模块操作
 
@@ -197,8 +198,8 @@ fingerprint_status_t M5UnitFingerprint2::PS_Search(uint8_t BufferID, uint16_t St
 
     // 创建命令数据包
     uint8_t params[] = {BufferID, 
-                        (StartPage >> 8) & 0xFF, StartPage & 0xFF,
-                        (PageNum >> 8) & 0xFF, PageNum & 0xFF};
+                        static_cast<uint8_t>((StartPage >> 8) & 0xFF), static_cast<uint8_t>(StartPage & 0xFF),
+                        static_cast<uint8_t>((PageNum >> 8) & 0xFF), static_cast<uint8_t>(PageNum & 0xFF)};
     Fingerprint_Packet commandPacket =
         Fingerprint_Packet::new_command_packet(_fp2_address, FINGERPRINT_SEARCH, params, 5);
 
@@ -301,7 +302,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_StoreChar(uint8_t BufferID, uint16_t
     }
 
     // 创建命令数据包
-    uint8_t params[] = {BufferID, (PageID >> 8) & 0xFF, PageID & 0xFF};
+    uint8_t params[] = {BufferID, static_cast<uint8_t>((PageID >> 8) & 0xFF), static_cast<uint8_t>(PageID & 0xFF)};
     Fingerprint_Packet commandPacket =
         Fingerprint_Packet::new_command_packet(_fp2_address, FINGERPRINT_STORE, params, 3);
 
@@ -353,7 +354,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_LoadChar(uint8_t BufferID, uint16_t 
     }
 
     // 创建命令数据包
-    uint8_t params[] = {BufferID, (PageID >> 8) & 0xFF, PageID & 0xFF};
+    uint8_t params[] = {BufferID, static_cast<uint8_t>((PageID >> 8) & 0xFF), static_cast<uint8_t>(PageID & 0xFF)};
     Fingerprint_Packet commandPacket =
         Fingerprint_Packet::new_command_packet(_fp2_address, FINGERPRINT_LOAD_MODEL, params, 3);
 
@@ -727,6 +728,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadSysPara(PS_ReadSysPara_BasicPara
     const uint8_t* responseData = responsePacket.get_data();
     uint8_t confirmationCode    = responseData[0];
 
+#ifdef M5_MODULE_DEBUG_SERIAL_ENABLED
     // 如果命令执行成功，解析16字节的系统参数
     if (confirmationCode == FINGERPRINT_OK) {
         // 确保有足够的数据长度
@@ -776,6 +778,8 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadSysPara(PS_ReadSysPara_BasicPara
             return FINGERPRINT_PACKET_OVERFLOW;
         }
     }
+
+#endif
 
     serialPrintf("Read system parameters result: %s [confirmation: %s]\r\n",
                  (confirmationCode == FINGERPRINT_OK) ? "Success" : "Failed",
@@ -1229,7 +1233,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t* IndexTableDa
         for (int i = 13; i < 32; i++) {
             IndexTableData[i] = 0;
         }
-        
+#ifdef M5_MODULE_DEBUG_SERIAL_ENABLED
         serialPrintf("Read index table successful: IndexTableID: %d (fixed)\r\n", IndexTableID);
         
         // 计算模板范围（固定为0-99，只有100个有效位）
@@ -1264,7 +1268,9 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadIndexTable(uint8_t* IndexTableDa
             M5_MODULE_DEBUG_SERIAL.println("");
         }
         
+#endif
     }
+
 
     serialPrintf("Read index table result: %s [confirmation: %s] (IndexTableID fixed to 0)\r\n",
                  (confirmationCode == FINGERPRINT_OK) ? "Success" : "Failed",
@@ -1318,12 +1324,16 @@ fingerprint_status_t M5UnitFingerprint2::PS_GetChipSN(uint8_t* ChipSN) const
         if (ChipSN != nullptr) {
             memcpy(ChipSN, &responseData[1], 32);
         }
-        
+#ifdef M5_MODULE_DEBUG_SERIAL_ENABLED
+        else {
+            serialPrintln("Warning: ChipSN buffer is null, cannot copy chip serial number");
+        }
         serialPrint("Get chip SN successful: ");
         for (int i = 0; i < 32; i++) {
             M5_MODULE_DEBUG_SERIAL.printf("%02X", responseData[1 + i]);
         }
         M5_MODULE_DEBUG_SERIAL.println("");
+#endif
     }
 
     serialPrintf("Get chip SN result: %s [confirmation: %s]\r\n",
@@ -1564,8 +1574,8 @@ fingerprint_status_t M5UnitFingerprint2::PS_SearchNow(uint16_t StartPage, uint16
 
     // 创建命令数据包：起始页面(2字节) + 页数(2字节)
     uint8_t commandParams[4] = {
-        (StartPage >> 8) & 0xFF, StartPage & 0xFF,  // 起始页面
-        (PageNum >> 8) & 0xFF, PageNum & 0xFF       // 搜索页数
+        static_cast<uint8_t>((StartPage >> 8) & 0xFF), static_cast<uint8_t>(StartPage & 0xFF),  // 起始页面
+        static_cast<uint8_t>((PageNum >> 8) & 0xFF), static_cast<uint8_t>(PageNum & 0xFF)       // 搜索页数
     };
 
     // 创建命令数据包
