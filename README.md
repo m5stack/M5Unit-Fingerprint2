@@ -50,7 +50,7 @@ void setup() {
     fingerprint2.PS_SetSleepTime(60); // 60秒
   
     // 设置工作模式为常开模式
-    fingerprint2.PS_SeTWorkMode(1);
+    fingerprint2.PS_SetWorkMode(1);
   
     // 保存配置到Flash
     fingerprint2.PS_SaveConfigurationToFlash(0); // 保存休眠时间
@@ -169,7 +169,7 @@ void setup() {
   
         // 配置传感器
         fingerprint2.PS_SetSleepTime(60);
-        fingerprint2.PS_SeTWorkMode(1);
+        fingerprint2.PS_SetWorkMode(1);
         fingerprint2.PS_SaveConfigurationToFlash(0);
         fingerprint2.PS_SaveConfigurationToFlash(1);
   
@@ -346,7 +346,7 @@ bool verifyFingerprintWithFeedback(uint16_t& matchedID) {
   - `SleepTime` - 返回的休眠时间
 - **返回值**: 操作状态码
 
-#### `fingerprint_status_t PS_SeTWorkMode(uint8_t WorkMode)`
+#### `fingerprint_status_t PS_SetWorkMode(uint8_t WorkMode)`
 
 设置工作模式
 

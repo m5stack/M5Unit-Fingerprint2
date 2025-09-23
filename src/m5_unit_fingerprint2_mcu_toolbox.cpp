@@ -102,7 +102,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_GeTSleepTime(uint8_t& SleepTime) con
 }
 
 // 设置工作模式
-fingerprint_status_t M5UnitFingerprint2::PS_SeTWorkMode(uint8_t WorkMode) const
+fingerprint_status_t M5UnitFingerprint2::PS_SetWorkMode(uint8_t WorkMode) const
 {
     // 验证工作模式 (0:定时休眠模式 1:开启模式)
     if (WorkMode > 1) {
@@ -118,26 +118,26 @@ fingerprint_status_t M5UnitFingerprint2::PS_SeTWorkMode(uint8_t WorkMode) const
     // 发送命令包
     M5UnitFingerprint2* nonConstThis = const_cast<M5UnitFingerprint2*>(this);
     if (!nonConstThis->sendPacketData(commandPacket)) {
-        serialPrintln("Failed to send PS_SeTWorkMode command");
+        serialPrintln("Failed to send PS_SetWorkMode command");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
     // 接收响应包
     Fingerprint_Packet responsePacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_ACKPACKET, nullptr, 0);
     if (!nonConstThis->receivePacketData(responsePacket, 1000)) {
-        serialPrintln("Failed to receive PS_SeTWorkMode response");
+        serialPrintln("Failed to receive PS_SetWorkMode response");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
     // 检查响应包类型
     if (responsePacket.get_type() != FINGERPRINT_PACKET_ACKPACKET) {
-        serialPrintln("Invalid response packet type for PS_SeTWorkMode");
+        serialPrintln("Invalid response packet type for PS_SetWorkMode");
         return FINGERPRINT_PACKET_BADPACKET;
     }
 
     // 检查数据长度
     if (responsePacket.get_actual_data_length() < 1) {
-        serialPrintln("Invalid response data length for PS_SeTWorkMode");
+        serialPrintln("Invalid response data length for PS_SetWorkMode");
         return FINGERPRINT_PACKET_OVERFLOW;
     }
 

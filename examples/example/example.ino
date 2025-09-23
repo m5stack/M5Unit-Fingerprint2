@@ -62,7 +62,7 @@ void setup() {
     }
 
     // 设置工作模式为开启模式
-    fingerprint2.PS_SeTWorkMode(1); // 1:开启模式
+    fingerprint2.PS_SetWorkMode(1); // 1:开启模式
     // 获取并打印工作模式
     uint8_t WorkMode;
     if (fingerprint2.PS_GetWorkMode(WorkMode) == FINGERPRINT_OK) {

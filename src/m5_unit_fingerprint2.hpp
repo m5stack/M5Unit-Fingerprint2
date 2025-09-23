@@ -302,7 +302,7 @@ public:
     //MCU命令
     fingerprint_status_t PS_SetSleepTime(uint8_t SleepTime) const;                      //D0H 设置休眠时间 10-254范围 单位：秒
     fingerprint_status_t PS_GeTSleepTime(uint8_t &SleepTime) const;                     //D1H 获取休眠时间
-    fingerprint_status_t PS_SeTWorkMode(uint8_t WorkMode) const;                        //D2H 设置工作模式 -> 0:定时休眠模式 1:开启模式
+    fingerprint_status_t PS_SetWorkMode(uint8_t WorkMode) const;                        //D2H 设置工作模式 -> 0:定时休眠模式 1:开启模式
     fingerprint_status_t PS_GetWorkMode(uint8_t &WorkMode) const;                       //D3H 获取工作模式
     fingerprint_status_t PS_ActivateFingerprintModule(void)  const;                     //D4H 激活 Unit-Fingerprint 内部指纹模组
     fingerprint_status_t PS_GetFingerprintModuleStatus(uint8_t &ModuleStatus) const;    //D5H 获取指纹模组工作状态
