@@ -486,7 +486,7 @@ bool verifyFingerprintWithFeedback(uint16_t& matchedID) {
   - `RawData` - 返回的16字节系统参数
 - **返回值**: 操作状态码
 
-#### `fingerprint_status_t PS_ValidTempleteNum(uint16_t &ValidNum)`
+#### `fingerprint_status_t PS_ValidTemplateNum(uint16_t &ValidNum)`
 
 获取有效模板数量
 
@@ -587,7 +587,7 @@ void setup() {
   
     // 获取已注册指纹数量
     uint16_t validCount = 0;
-    if (fingerprint2.PS_ValidTempleteNum(validCount) == FINGERPRINT_OK) {
+    if (fingerprint2.PS_ValidTemplateNum(validCount) == FINGERPRINT_OK) {
         Serial.printf("已注册指纹数量: %d\n", validCount);
     }
 }

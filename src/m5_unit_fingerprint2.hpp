@@ -299,6 +299,36 @@ public:
      */
     size_t writeSerial(const uint8_t* buffer, size_t length);
 
+    // Wakeup callback related interface
+    /**
+     * @brief Set the wakeup callback function.
+     *
+     * Allows the user to register a custom callback that will be invoked when a
+     * wakeup packet from the fingerprint module is detected.
+     * If no custom callback is provided (callback == nullptr) a built‑in
+     * default logging callback will be used.
+     *
+     * Thread-safety: The callback is stored as a raw function pointer and is
+     * expected to be lightweight and non-blocking. Avoid long delays or
+     * blocking operations inside the callback.
+     *
+     * @param callback Function pointer of type PS_WakeupCallback_t. Pass nullptr
+     *                 to restore/use the default callback.
+     */
+    void setWakeupCallback(PS_WakeupCallback_t callback);
+
+    /**
+     * @brief Get the currently registered wakeup callback.
+     *
+     * Returns the user-provided callback if one was set. If this returns
+     * nullptr the internal default callback will be used when a wakeup packet
+     * arrives.
+     *
+     * @return PS_WakeupCallback_t Currently active wakeup callback pointer, or
+     *                             nullptr meaning the default will be used.
+     */
+    PS_WakeupCallback_t getWakeupCallback() const;
+    
     //MCU命令
     fingerprint_status_t PS_SetSleepTime(uint8_t SleepTime) const;                      //D0H 设置休眠时间 10-254范围 单位：秒
     fingerprint_status_t PS_GeTSleepTime(uint8_t &SleepTime) const;                     //D1H 获取休眠时间
@@ -330,7 +360,7 @@ public:
     // ↓ 18H 写记事本 输入：NotepadID:便笺号 0-3，NotepadData:便笺数据，NotepadLength:便笺数据长度(不足32字节会自动补0)
     fingerprint_status_t PS_WriteNotepad(uint8_t NotepadID, const uint8_t* NotepadData, uint16_t NotepadLength) const;
     fingerprint_status_t PS_ReadNotepad(uint8_t NotepadID, uint8_t* NotepadData) const; // 19H 读记事本 输入：NotepadID 便笺号 0-3，NotepadData 便笺数据(返回32字节数据)
-    fingerprint_status_t PS_ValidTempleteNum(uint16_t &ValidNum) const;                 // 1DH 有效模板数量 返回：有效模板数量
+    fingerprint_status_t PS_ValidTemplateNum(uint16_t &ValidNum) const;                 // 1DH 有效模板数量 返回：有效模板数量
     // ↓ 1FH 读取索引表 返回：IndexTableData:索引表数据(返回32字节数据),每1bit代表一个模板的状态 1:已录入 0:未录入 ，只有前100位有效
     fingerprint_status_t PS_ReadIndexTable(uint8_t* IndexTableData) const; 
     fingerprint_status_t PS_GetChipSN(uint8_t* ChipSN) const;                          // 34H 获取芯片序列号 返回：32字节芯片序列号
@@ -369,23 +399,6 @@ public:
     fingerprint_status_t PS_AutoIdentify(uint8_t securityLevel, uint16_t ID, fingerprint_auto_verify_flags_t flags,
                                          uint16_t& PageID, PS_AutoIdentifyCallback_t callback = nullptr) const;
 
-    // 唤醒回调函数相关接口
-    /**
-     * @brief 设置唤醒回调函数
-     * 
-     * 用户可以设置自定义的唤醒回调函数，当检测到指纹模块发送的唤醒包时会调用该函数。
-     * 如果没有设置自定义回调函数，将使用默认的日志打印函数。
-     * 
-     * @param callback 唤醒回调函数指针，传入nullptr将使用默认回调
-     */
-    void setWakeupCallback(PS_WakeupCallback_t callback);
-    
-    /**
-     * @brief 获取当前设置的唤醒回调函数
-     * 
-     * @return PS_WakeupCallback_t 当前设置的回调函数指针，nullptr表示使用默认回调
-     */
-    PS_WakeupCallback_t getWakeupCallback() const;
 
 private:
     // 静态实例指针，用于在回调函数中访问类成员

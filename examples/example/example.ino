@@ -119,7 +119,7 @@ void setup() {
   // }
 
   // uint16_t validTemplateCount = 0;
-  // if (fingerprint2.PS_ValidTempleteNum(validTemplateCount) == FINGERPRINT_OK) {
+  // if (fingerprint2.PS_ValidTemplateNum(validTemplateCount) == FINGERPRINT_OK) {
   //   Serial.printf("Valid template count: %d\r\n", validTemplateCount);
   //   canvas.setCursor(2, 60);
   // } else {

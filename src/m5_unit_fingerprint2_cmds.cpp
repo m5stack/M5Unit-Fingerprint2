@@ -1114,7 +1114,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadNotepad(uint8_t NotepadID, uint8
 }
 
 // 读有效模板个数 - 获取指纹库中已存储的有效模板数量
-fingerprint_status_t M5UnitFingerprint2::PS_ValidTempleteNum(uint16_t &ValidNum) const
+fingerprint_status_t M5UnitFingerprint2::PS_ValidTemplateNum(uint16_t &ValidNum) const
 {
     // 创建命令数据包
     Fingerprint_Packet commandPacket =
@@ -1123,26 +1123,26 @@ fingerprint_status_t M5UnitFingerprint2::PS_ValidTempleteNum(uint16_t &ValidNum)
     // 发送命令包
     M5UnitFingerprint2* nonConstThis = const_cast<M5UnitFingerprint2*>(this);
     if (!nonConstThis->sendPacketData(commandPacket)) {
-        serialPrintln("Failed to send PS_ValidTempleteNum command");
+        serialPrintln("Failed to send PS_ValidTemplateNum command");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
     // 接收响应包
     Fingerprint_Packet responsePacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_ACKPACKET, nullptr, 0);
     if (!nonConstThis->receivePacketData(responsePacket, 1000)) {
-        serialPrintln("Failed to receive PS_ValidTempleteNum response");
+        serialPrintln("Failed to receive PS_ValidTemplateNum response");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
     // 检查响应包类型
     if (responsePacket.get_type() != FINGERPRINT_PACKET_ACKPACKET) {
-        serialPrintln("Invalid response packet type for PS_ValidTempleteNum");
+        serialPrintln("Invalid response packet type for PS_ValidTemplateNum");
         return FINGERPRINT_PACKET_BADPACKET;
     }
 
     // 检查数据长度 (1字节确认码 + 2字节有效模板数量)
     if (responsePacket.get_actual_data_length() < 3) {
-        serialPrintln("Invalid response data length for PS_ValidTempleteNum");
+        serialPrintln("Invalid response data length for PS_ValidTemplateNum");
         return FINGERPRINT_PACKET_OVERFLOW;
     }
 
