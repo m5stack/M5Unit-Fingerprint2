@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "m5_unit_fingerprint2.hpp"
+#include "M5UnitFingerprint2.hpp"
 #include <string.h>  // 为了使用 memcpy 和 memset
 
 //指纹模块操作

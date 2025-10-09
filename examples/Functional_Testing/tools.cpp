@@ -8,11 +8,11 @@ bool fingerDetectionEnabled            = true;  // 指纹检测线程是否启�
 bool touchDetectionEnabled             = true;  // 触摸检测是否启用
 int fingerPresentCount                 = 0;     // 手指存在的连续计数
 
-bool displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBufferSize, M5Canvas& canvas,
+bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5Canvas& canvas,
                                   int displayX, int displayY, uint8_t rotation)
 {
     // 获取指纹图像
-    if (fingerprint2.PS_GetImage() != FINGERPRINT_OK) {
+    if (fp2.PS_GetImage() != FINGERPRINT_OK) {
         Serial.println("Failed to get fingerprint image.");
         canvas.setCursor(2, 60);
         canvas.printf("Failed to get image");
@@ -30,7 +30,7 @@ bool displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBuffe
 
     // 上传图像
     uint32_t actualImageSize    = 0;
-    fingerprint_status_t result = fingerprint2.PS_UpImage(imageBuffer, maxBufferSize, actualImageSize);
+    fingerprint_status_t result = fp2.PS_UpImage(imageBuffer, maxBufferSize, actualImageSize);
 
     if (result == FINGERPRINT_OK) {
         Serial.printf("Image uploaded successfully, size: %d bytes\r\n", actualImageSize);
@@ -113,12 +113,12 @@ bool displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBuffe
     }
 }
 
-bool displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int displayX, int displayY,
+bool displaySystemParameters(M5UnitFingerprint2& fp2, M5Canvas& canvas, int displayX, int displayY,
                                   bool clearArea)
 {
     // 读取系统参数
     PS_ReadSysPara_BasicParams sysParams;
-    fingerprint_status_t result = fingerprint2.PS_ReadSysPara(sysParams);
+    fingerprint_status_t result = fp2.PS_ReadSysPara(sysParams);
 
     if (result != FINGERPRINT_OK) {
         Serial.println("Failed to read system parameters.");
@@ -267,7 +267,7 @@ bool displayMenu(M5Canvas& canvas, int displayX, int displayY)
     return true;
 }
 
-bool initializeFingerprintSensor(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int maxRetries, int retryDelay)
+bool initializeFingerprintSensor(M5UnitFingerprint2& fp2, M5Canvas& canvas, int maxRetries, int retryDelay)
 {
     Serial.println("Starting fingerprint sensor initialization...");
 
@@ -281,16 +281,16 @@ bool initializeFingerprintSensor(M5UnitFingerprint2& fingerprint2, M5Canvas& can
 
         // 检查指纹传感器是否连接成功
         uint8_t ModuleStatus;
-        if (fingerprint2.PS_GetFingerprintModuleStatus(ModuleStatus) == FINGERPRINT_OK) {
+    if (fp2.PS_GetFingerprintModuleStatus(ModuleStatus) == FINGERPRINT_OK) {
             Serial.printf("Module status: 0x%02X\n", ModuleStatus);
 
             // 启动指纹传感器
-            if (fingerprint2.PS_ActivateFingerprintModule() == FINGERPRINT_OK) {
+            if (fp2.PS_ActivateFingerprintModule() == FINGERPRINT_OK) {
                 Serial.println("Fingerprint module activated successfully.");
 
                 // 获取版本号
                 uint8_t FwVersion;
-                if (fingerprint2.PS_GetFirmwareVersion(FwVersion) == FINGERPRINT_OK) {
+                if (fp2.PS_GetFirmwareVersion(FwVersion) == FINGERPRINT_OK) {
                     Serial.printf("Fp2 is active. -> Firmware FwVersion: 0x%02X\r\n", FwVersion);
                     canvas.setCursor(2, 20);
                     canvas.printf("Fp2 is active. -> FW:0x%02X ", FwVersion);
@@ -298,7 +298,7 @@ bool initializeFingerprintSensor(M5UnitFingerprint2& fingerprint2, M5Canvas& can
 
                     // 获取芯片序列号
                     uint8_t ChipSN[32] = {0};  // 创建一个32字节的缓冲区来存储芯片序列号
-                    if (fingerprint2.PS_GetChipSN(ChipSN) == FINGERPRINT_OK) {
+                    if (fp2.PS_GetChipSN(ChipSN) == FINGERPRINT_OK) {
                         Serial.print("Chip SN: ");
                         for (int i = 0; i < 32; i++) {
                             Serial.printf("%02X", ChipSN[i]);
@@ -310,14 +310,14 @@ bool initializeFingerprintSensor(M5UnitFingerprint2& fingerprint2, M5Canvas& can
                     }
 
                     // 握手指令
-                    if (fingerprint2.PS_HandShake() == FINGERPRINT_OK) {
+                    if (fp2.PS_HandShake() == FINGERPRINT_OK) {
                         Serial.println("Handshake successful.");
                     } else {
                         Serial.println("Failed to perform handshake.");
                     }
 
                     // 校验传感器
-                    if (fingerprint2.PS_CheckSensor() == FINGERPRINT_OK) {
+                    if (fp2.PS_CheckSensor() == FINGERPRINT_OK) {
                         Serial.println("Sensor check passed.");
                     } else {
                         Serial.println("Sensor check failed.");
@@ -530,7 +530,7 @@ bool PS_AutoIdentify_callback(uint8_t securityLevel, fingerprint_status_t confir
 }
 
 // 触摸检测函数
-void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
+void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fp2)
 {
     if (!touchDetectionEnabled) {
         return;  // 触摸检测被禁用时直接返回
@@ -606,7 +606,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                                                   FINGERPRINT_AUTO_ENROLL_NO_LIFT_REQUIRED);
                 fingerprint_auto_enroll_flags_t flags =
                     (fingerprint_auto_enroll_flags_t)(FINGERPRINT_AUTO_ENROLL_ALLOW_OVERWRITE_ID);
-                fingerprint2.PS_AutoEnroll(ls_id, ls_enrollCount, flags, &ls_param_1, &ls_param_2,
+                fp2.PS_AutoEnroll(ls_id, ls_enrollCount, flags, &ls_param_1, &ls_param_2,
                                            PS_AutoEnroll_callback);
 
                 // 等待5s
@@ -619,7 +619,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                 fingerDetectionEnabled = true;  // 重新启用指纹检测
                 if (fingerDetectionTaskHandle == NULL) {
                     Serial.println("Restarting finger detection task.");
-                    FingerDetectionParams params = {&fingerprint2, &canvas};
+                    FingerDetectionParams params = { .fp2 = &fp2, .canvas = &canvas };
                     xTaskCreate(fingerDetectionTask, "FingerDetectionTask", 4096, &params, 1,
                                 &fingerDetectionTaskHandle);
                 }
@@ -643,7 +643,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
 
                 // Auto Identify 功能
                 uint16_t matchedPageID = 0;
-                fingerprint2.PS_AutoIdentify(0, 0xFFFF, FINGERPRINT_AUTO_VERIFY_DEFAULT, matchedPageID,
+                fp2.PS_AutoIdentify(0, 0xFFFF, FINGERPRINT_AUTO_VERIFY_DEFAULT, matchedPageID,
                                              PS_AutoIdentify_callback);
 
                 // 等待5s
@@ -656,7 +656,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                 fingerDetectionEnabled = true;  // 重新启用指纹检测
                 if (fingerDetectionTaskHandle == NULL) {
                     Serial.println("Restarting finger detection task.");
-                    FingerDetectionParams params = {&fingerprint2, &canvas};
+                    FingerDetectionParams params = { .fp2 = &fp2, .canvas = &canvas };
                     xTaskCreate(fingerDetectionTask, "FingerDetectionTask", 4096, &params, 1,
                                 &fingerDetectionTaskHandle);
                 }
@@ -683,7 +683,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                     uint32_t totalSize = 0;  // 实际接收的总大小
 
                     // 先加载模板到缓冲区
-                    fingerprint2.PS_LoadChar(2, 9);
+                    fp2.PS_LoadChar(2, 9);
 
                     Serial.println("Starting automatic template upload...");
                     canvas.setCursor(2, 40);
@@ -692,7 +692,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
 
                     // 使用自动上传函数
                     fingerprint_status_t result =
-                        fingerprint2.PS_UploadTemplateAuto(templateBuffer,                 // 缓冲区
+                        fp2.PS_UploadTemplateAuto(templateBuffer,                 // 缓冲区
                                                            16384,                          // 缓冲区大小
                                                            totalSize,                      // 返回的实际大小
                                                            templateUploadProgressCallback  // 进度回调函数
@@ -705,12 +705,12 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                     canvas.printf("Auto download template...");
                     canvas.pushSprite(0, 0);
 
-                    result = fingerprint2.PS_DownloadTemplateAuto(templateBuffer,                   // 缓冲区
+                    result = fp2.PS_DownloadTemplateAuto(templateBuffer,                   // 缓冲区
                                                                   totalSize,                        // 返回的实际大小
                                                                   templateDownloadProgressCallback  // 进度回调函数
                     );
 
-                    result = fingerprint2.PS_StoreChar(1, 10);
+                    result = fp2.PS_StoreChar(1, 10);
 
                     free(templateBuffer);
                 } else {
@@ -730,7 +730,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                 fingerDetectionEnabled = true;  // 重新启用指纹检测
                 if (fingerDetectionTaskHandle == NULL) {
                     Serial.println("Restarting finger detection task.");
-                    FingerDetectionParams params = {&fingerprint2, &canvas};
+                    FingerDetectionParams params = { .fp2 = &fp2, .canvas = &canvas };
                     xTaskCreate(fingerDetectionTask, "FingerDetectionTask", 4096, &params, 1,
                                 &fingerDetectionTaskHandle);
                 }
@@ -751,7 +751,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                 canvas.fillRect(0, 41, 320, 240, 0x0000);  // 清除画布
                 canvas.pushSprite(0, 0);                   // 刷新画布
 
-                displaySystemParameters(fingerprint2, canvas, 2, 60);
+                displaySystemParameters(fp2, canvas, 2, 60);
                 canvas.pushSprite(0, 0);                   // 刷新画布
 
                 delay(5000);
@@ -764,7 +764,7 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2)
                 fingerDetectionEnabled = true;  // 重新启用指纹检测
                 if (fingerDetectionTaskHandle == NULL) {
                     Serial.println("Restarting finger detection task.");
-                    FingerDetectionParams params = {&fingerprint2, &canvas};
+                    FingerDetectionParams params = { .fp2 = &fp2, .canvas = &canvas };
                     xTaskCreate(fingerDetectionTask, "FingerDetectionTask", 4096, &params, 1,
                                 &fingerDetectionTaskHandle);
                 }
@@ -782,13 +782,13 @@ void fingerDetectionTask(void* parameter)
     Serial.println("Finger detection task started.");
 
     // 从参数中提取指纹传感器和画布对象
-    FingerDetectionParams* params    = (FingerDetectionParams*)parameter;
-    M5UnitFingerprint2* fingerprint2 = params->fingerprint2;
-    M5Canvas* canvas                 = params->canvas;
+    FingerDetectionParams* params = (FingerDetectionParams*)parameter;
+    M5UnitFingerprint2* fp2       = params->fp2;
+    M5Canvas* canvas              = params->canvas;
 
     while (fingerDetectionEnabled) {
         // 使用PS_GetImage检测手指是否存在
-        fingerprint_status_t result = fingerprint2->PS_GetImage();
+        fingerprint_status_t result = fp2->PS_GetImage();
 
         if (result == FINGERPRINT_OK) {
             fingerPresentCount++;
@@ -803,7 +803,7 @@ void fingerDetectionTask(void* parameter)
                 touchDetectionEnabled = false;
 
                 // 进入指纹图像显示
-                if (displayFingerprintImage(*fingerprint2, 1024 * 16, *canvas, 56, 100, 1)) {
+                if (displayFingerprintImage(*fp2, 1024 * 16, *canvas, 56, 100, 1)) {
                     Serial.println("Fingerprint image displayed successfully.");
                 } else {
                     Serial.println("Failed to display fingerprint image.");
@@ -815,6 +815,8 @@ void fingerDetectionTask(void* parameter)
 
                 // 重新显示菜单
                 // displayMenu(*canvas, 0, 45);
+
+                // 刷新屏幕
                 canvas->pushSprite(0, 0);
             }
         } else {

@@ -9,8 +9,8 @@
 
 #include "Arduino.h"
 #include <cstring>
-#include "m5_unit_fingerprint2_defs.hpp"
-#include "m5_unit_fingerprint2_debug.hpp"
+#include "M5UnitFingerprint2_defs.hpp"
+#include "M5UnitFingerprint2_debug.hpp"
 
 #if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
 #include <freertos/FreeRTOS.h>

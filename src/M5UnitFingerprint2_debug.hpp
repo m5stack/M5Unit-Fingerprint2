@@ -7,7 +7,7 @@
 #ifndef __M5_UNIT_FINGERPRINT2_DEBUG_H
 #define __M5_UNIT_FINGERPRINT2_DEBUG_H
 
-#include "m5_unit_fingerprint2_defs.hpp"
+#include "M5UnitFingerprint2_defs.hpp"
 
 // 前置声明
 class Fingerprint_Packet;

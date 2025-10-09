@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <M5Unified.hpp>
-#include <m5_unit_fingerprint2.hpp>
+#include <M5UnitFingerprint2.hpp>
 
 
 extern TaskHandle_t fingerDetectionTaskHandle;
@@ -11,7 +11,7 @@ extern TaskHandle_t fingerDetectionTaskHandle;
 /**
  * @brief 自动获取、显示指纹图像到画布上并管理内存
  * 
- * @param fingerprint2 指纹传感器对象引用
+ * @param fp2 指纹传感器对象引用
  * @param maxBufferSize 允许分配的最大内存大小（字节）
  * @param canvas 画布对象引用
  * @param displayX 显示位置X坐标
@@ -19,19 +19,19 @@ extern TaskHandle_t fingerDetectionTaskHandle;
  * @param rotation 旋转角度
  * @return bool true表示成功，false表示失败
  */
-bool displayFingerprintImage(M5UnitFingerprint2& fingerprint2, uint32_t maxBufferSize, M5Canvas& canvas, int displayX, int displayY, uint8_t rotation);
+bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5Canvas& canvas, int displayX, int displayY, uint8_t rotation);
 
 /**
  * @brief 自动读取并显示系统参数到画布上
  * 
- * @param fingerprint2 指纹传感器对象引用
+ * @param fp2 指纹传感器对象引用
  * @param canvas 画布对象引用
  * @param displayX 显示位置X坐标
  * @param displayY 显示位置Y坐标
  * @param clearArea 是否清除显示区域 (true/false)
  * @return bool true表示成功，false表示失败
  */
-bool displaySystemParameters(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int displayX, int displayY, bool clearArea = true);
+bool displaySystemParameters(M5UnitFingerprint2& fp2, M5Canvas& canvas, int displayX, int displayY, bool clearArea = true);
 
 /**
  * @brief 显示菜单界面，包含Auto Enroll和Auto Identify两个选项
@@ -54,19 +54,19 @@ bool displayMenu(M5Canvas& canvas, int displayX, int displayY);
  * - 执行握手指令
  * - 校验传感器状态
  * 
- * @param fingerprint2 指纹传感器对象引用
+ * @param fp2 指纹传感器对象引用
  * @param canvas 画布对象引用，用于显示状态信息
  * @param maxRetries 最大重试次数，设为0表示无限重试，默认为10次
  * @param retryDelay 重试间隔时间(毫秒)，默认为1000ms
  * @return bool true表示初始化成功，false表示失败
  */
-bool initializeFingerprintSensor(M5UnitFingerprint2& fingerprint2, M5Canvas& canvas, int maxRetries = 10, int retryDelay = 1000);
+bool initializeFingerprintSensor(M5UnitFingerprint2& fp2, M5Canvas& canvas, int maxRetries = 10, int retryDelay = 1000);
 
 /**
  * @brief 指纹检测线程任务结构体
  */
 struct FingerDetectionParams {
-    M5UnitFingerprint2* fingerprint2;
+    M5UnitFingerprint2* fp2;
     M5Canvas* canvas;
 };
 
@@ -79,9 +79,9 @@ void fingerDetectionTask(void *parameter);
 /**
  * @brief 处理触摸输入
  * @param canvas 画布对象引用
- * @param fingerprint2 指纹传感器对象引用
+ * @param fp2 指纹传感器对象引用
  */
-void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fingerprint2);
+void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fp2);
 
 /**
  * @brief PS_AutoEnroll 回调函数

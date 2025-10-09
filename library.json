@@ -10,7 +10,7 @@
         "type": "git",
         "url": "https://gitlab.m5stack.com/moyongming/m5unit-fingerprint2-library.git"
     },
-    "version": "1.0.0",
+    "version": "1.1.0",
     "frameworks": [
         "arduino"
     ],
@@ -18,7 +18,7 @@
         "espressif32",
         "native"
     ],
-    "headers": "m5_unit_fingerprint2.hpp",
+    "headers": "M5UnitFingerprint2.hpp",
     "dependencies": {
   }  
 }

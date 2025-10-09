@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "m5_unit_fingerprint2.hpp"
+#include "M5UnitFingerprint2.hpp"
 
 #if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
 // 静态成员变量定义

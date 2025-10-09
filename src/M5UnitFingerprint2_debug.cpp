@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "m5_unit_fingerprint2_debug.hpp"
-#include "m5_unit_fingerprint2.hpp"
+#include "M5UnitFingerprint2_debug.hpp"
+#include "M5UnitFingerprint2.hpp"
 
 #if defined M5_MODULE_DEBUG_SERIAL
 

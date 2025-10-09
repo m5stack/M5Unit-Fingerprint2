@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "m5_unit_fingerprint2.hpp"
+#include "M5UnitFingerprint2.hpp"
 
 // 设置休眠时间
 fingerprint_status_t M5UnitFingerprint2::PS_SetSleepTime(uint8_t SleepTime) const
