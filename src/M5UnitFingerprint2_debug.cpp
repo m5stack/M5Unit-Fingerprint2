@@ -9,8 +9,6 @@
 
 #if defined M5_MODULE_DEBUG_SERIAL
 
-
-
 void FingerprintDebugUtils::printPacketHex(const char* prefix, const uint8_t* buffer, size_t length) {
 #if M5_MODULE_DEBUG_SERIAL_ENABLED
     serialPrint(String(prefix) + " Hex: ");

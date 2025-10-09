@@ -919,7 +919,7 @@ if (status != FINGERPRINT_OK) {
 ## 更多信息
 
 - [M5Stack官网](http://M5Stack.com)
-- [项目仓库](https://gitlab.m5stack.com/moyongming/m5unit-fingerprint2-library.git)
+- [项目仓库](https://github.com/m5stack/M5Unit-Fingerprint2)
 - [硬件文档](http://M5Stack.com)
 
 ---

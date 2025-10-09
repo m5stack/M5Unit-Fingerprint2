@@ -19,8 +19,6 @@
 #include <freertos/queue.h>
 #endif
 
-
-
 class Fingerprint_Packet {
 public:
     Fingerprint_Packet(uint16_t start_code = FINGERPRINT_STARTCODE, uint32_t address = 0, uint8_t type = FINGERPRINT_PACKET_DATAPACKET, const uint8_t* data = nullptr, uint16_t data_length = 0) {

@@ -1,10 +1,10 @@
-# M5SwitchC6
+# M5Unit-Fingerprint2
 
 ## Overview
 
 ### SKU:U203
 
-ESP-NOW based library to control and manage Switch-C6 smart switch devices.
+Arduino library to control and manage M5Stack Unit-Fingerprint2 fingerprint recognition module. This library provides a complete fingerprint recognition API, supporting fingerprint enrollment, verification, deletion, system configuration, and other functions.
 
 ## Related Link
 
@@ -18,4 +18,4 @@ ESP-NOW based library to control and manage Switch-C6 smart switch devices.
 
 ## License
 
-- [M5SwitchC6 - MIT](LICENSE)
+- [M5Unit-Fingerprint2 - MIT](LICENSE)

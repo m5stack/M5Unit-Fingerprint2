@@ -5,7 +5,7 @@
  */
 
 #include "M5UnitFingerprint2.hpp"
-#include <string.h>  // 为了使用 memcpy 和 memset
+#include <string.h>
 
 //指纹模块操作
 
