@@ -311,16 +311,15 @@ bool verifyFingerprintWithFeedback(uint16_t& matchedID) {
 
 ### 初始化和配置
 
-#### `M5UnitFingerprint2(uint32_t password, uint32_t address, HardwareSerial* serialPort, int txPin, int rxPin)`
+#### `M5UnitFingerprint2(HardwareSerial* serialPort, int txPin, int rxPin, uint32_t address)`
 
 构造函数，创建M5UnitFingerprint2实例
 
 - **参数**:
-  - `password` - 模块密码，默认为 0x00000000
-  - `address` - 模块地址，默认为 0xFFFFFFFF
   - `serialPort` - 串口对象指针
   - `txPin` - TX引脚编号
   - `rxPin` - RX引脚编号
+  - `address` - 模块地址，默认为 0xFFFFFFFF
 
 #### `bool begin()`
 

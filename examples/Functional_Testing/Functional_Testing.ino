@@ -12,7 +12,7 @@ const char *PLATFORM = "in M5Stack CoreS3/-SE";
 
 M5Canvas canvas(&M5.Lcd);
 
-M5UnitFingerprint2 fp2(0x00000000, 0xFFFFFFFF, &Serial1, 2, 1); // 创建指纹传感器对象，使用默认密码和地址
+M5UnitFingerprint2 fp2(&Serial1, 2, 1); // 创建指纹传感器对象，使用默认地址
 
 bool fingerprintInitialized = false; // 指纹传感器初始化状态标志
 

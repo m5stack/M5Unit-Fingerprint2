@@ -311,16 +311,15 @@ bool verifyFingerprintWithFeedback(uint16_t& matchedID) {
 
 ### Initialization and Configuration
 
-#### `M5UnitFingerprint2(uint32_t password, uint32_t address, HardwareSerial* serialPort, int txPin, int rxPin)`
+#### `M5UnitFingerprint2(HardwareSerial* serialPort, int txPin, int rxPin, uint32_t address)`
 
 Constructor, creates an M5UnitFingerprint2 instance
 
 - **Parameters**:
-  - `password` - Module password, default is 0x00000000
-  - `address` - Module address, default is 0xFFFFFFFF
   - `serialPort` - Serial port object pointer
   - `txPin` - TX pin number
   - `rxPin` - RX pin number
+  - `address` - Module address, default is 0xFFFFFFFF
 
 #### `bool begin()`
 

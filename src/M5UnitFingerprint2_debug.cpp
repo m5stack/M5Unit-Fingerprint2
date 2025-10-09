@@ -14,28 +14,28 @@ void FingerprintDebugUtils::printPacketHex(const char* prefix, const uint8_t* bu
     serialPrint(String(prefix) + " Hex: ");
     
     if (length >= 9) {
-        // 起始码 (2字节)
+        // 起始码 (2字节) / Start code (2 bytes)
         M5_MODULE_DEBUG_SERIAL.printf("%02X %02X", buffer[0], buffer[1]);
         M5_MODULE_DEBUG_SERIAL.print(" | ");
         
-        // 地址 (4字节) - 分别打印每个字节以确保显示
+        // 地址 (4字节) - 分别打印每个字节以确保显示 / Address (4 bytes) - print each byte separately to ensure display
         for (int i = 2; i <= 5; i++) {
             M5_MODULE_DEBUG_SERIAL.printf("%02X", buffer[i]);
             if (i < 5) M5_MODULE_DEBUG_SERIAL.print(" ");
         }
         M5_MODULE_DEBUG_SERIAL.print(" | ");
         
-        // 包类型 (1字节)
+        // 包类型 (1字节) / Packet type (1 byte)
         M5_MODULE_DEBUG_SERIAL.printf("%02X", buffer[6]);
         M5_MODULE_DEBUG_SERIAL.print(" | ");
         
-        // 包长度 (2字节)
+        // 包长度 (2字节) / Packet length (2 bytes)
         M5_MODULE_DEBUG_SERIAL.printf("%02X %02X", buffer[7], buffer[8]);
         M5_MODULE_DEBUG_SERIAL.print(" | ");
         
-        // 数据部分 (可变长度)
+        // 数据部分 (可变长度) / Data section (variable length)
         uint16_t dataLength = (buffer[7] << 8) | buffer[8];
-        uint16_t actualDataLength = dataLength - 2; // 减去校验和长度
+        uint16_t actualDataLength = dataLength - 2; // 减去校验和长度 / Minus checksum length
         
         if (actualDataLength > 0 && length >= 9 + actualDataLength) {
             for (uint16_t i = 0; i < actualDataLength; i++) {
@@ -47,13 +47,13 @@ void FingerprintDebugUtils::printPacketHex(const char* prefix, const uint8_t* bu
             M5_MODULE_DEBUG_SERIAL.print(" | ");
         }
         
-        // 校验和 (2字节)
+        // 校验和 (2字节) / Checksum (2 bytes)
         if (length >= 9 + dataLength) {
             size_t checksumPos = 9 + dataLength - 2;
             M5_MODULE_DEBUG_SERIAL.printf("%02X %02X", buffer[checksumPos], buffer[checksumPos + 1]);
         }
     } else {
-        // 如果数据包太短，按原来的方式显示
+        // 如果数据包太短，按原来的方式显示 / If packet is too short, display in original way
         for (size_t i = 0; i < length; i++) {
             M5_MODULE_DEBUG_SERIAL.printf("%02X", buffer[i]);
             if (i < length - 1) {
@@ -71,14 +71,14 @@ void FingerprintDebugUtils::printPacketStructure(const char* prefix, const Finge
 #if M5_MODULE_COMMAND_PARSING_ENABLED
     serialPrint(String(prefix) + "Structure: ");
     
-    // 打印包结构，用 | 分隔各个字段
+    // 打印包结构，用 | 分隔各个字段 / Print packet structure with | separator for each field
     M5_MODULE_DEBUG_SERIAL.printf("StartCode:0x%04X | Address:0x%08lX | Type:0x%02X | Length:%d | Data:", 
         packet.get_start_code(), 
         packet.get_address(), 
         packet.get_type(), 
         packet.get_actual_data_length());
     
-    // 打印数据部分
+    // 打印数据部分 / Print data section
     const uint8_t* data = packet.get_data();
     for (uint16_t i = 0; i < packet.get_actual_data_length(); i++) {
         M5_MODULE_DEBUG_SERIAL.printf("%02X", data[i]);
@@ -90,10 +90,10 @@ void FingerprintDebugUtils::printPacketStructure(const char* prefix, const Finge
     M5_MODULE_DEBUG_SERIAL.printf(" | Checksum:0x%04X", packet.get_checksum());
     M5_MODULE_DEBUG_SERIAL.println();
     
-    // 另起一行解析结果
+    // 另起一行解析结果 / Start a new line for parsing results
     serialPrint(String(prefix) + "Parsed: ");
     
-    // 根据包类型解析内容
+    // 根据包类型解析内容 / Parse content based on packet type
     switch (packet.get_type()) {
         case FINGERPRINT_PACKET_COMMANDPACKET:
             if (packet.get_actual_data_length() > 0) {
