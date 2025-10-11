@@ -601,9 +601,13 @@ void handleTouchInput(M5Canvas& canvas, M5UnitFingerprint2& fp2)
                 uint8_t ls_param_1     = 0;
                 uint8_t ls_param_2     = 0;
                 Serial.printf("Starting Auto Enroll with ID: %d, Count: %d\n", ls_id, ls_enrollCount);
+
+                // 自动录取指纹的过程中不需要抬起手指
                 // fingerprint_auto_enroll_flags_t flags =
-                (fingerprint_auto_enroll_flags_t)(FINGERPRINT_AUTO_ENROLL_ALLOW_OVERWRITE_ID |
-                                                  FINGERPRINT_AUTO_ENROLL_NO_LIFT_REQUIRED);
+                // (fingerprint_auto_enroll_flags_t)(FINGERPRINT_AUTO_ENROLL_ALLOW_OVERWRITE_ID |
+                //                                   FINGERPRINT_AUTO_ENROLL_NO_LIFT_REQUIRED);
+
+                // 自动录取指纹的过程中需要抬起手指
                 fingerprint_auto_enroll_flags_t flags =
                     (fingerprint_auto_enroll_flags_t)(FINGERPRINT_AUTO_ENROLL_ALLOW_OVERWRITE_ID);
                 fp2.PS_AutoEnroll(ls_id, ls_enrollCount, flags, &ls_param_1, &ls_param_2,
