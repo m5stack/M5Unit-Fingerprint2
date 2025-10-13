@@ -2,16 +2,16 @@
 
 extern M5Canvas canvas;
 
-// 线程控制相关变量
+// 线程控制相关变量 / Thread control related variables
 TaskHandle_t fingerDetectionTaskHandle = NULL;
-bool fingerDetectionEnabled            = true;  // 指纹检测线程是否启用
-bool touchDetectionEnabled             = true;  // 触摸检测是否启用
-int fingerPresentCount                 = 0;     // 手指存在的连续计数
+bool fingerDetectionEnabled            = true;  // 指纹检测线程是否启用 / Whether finger detection thread is enabled
+bool touchDetectionEnabled             = true;  // 触摸检测是否启用 / Whether touch detection is enabled
+int fingerPresentCount                 = 0;     // 手指存在的连续计数 / Consecutive count of finger presence
 
 bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5Canvas& canvas,
                                   int displayX, int displayY, uint8_t rotation)
 {
-    // 获取指纹图像
+    // 获取指纹图像 / Get fingerprint image
     if (fp2.PS_GetImage() != FINGERPRINT_OK) {
         Serial.println("Failed to get fingerprint image.");
         canvas.setCursor(2, 60);
@@ -19,7 +19,7 @@ bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5
         return false;
     }
 
-    // 分配内存
+    // 分配内存 / Allocate memory
     uint8_t* imageBuffer = (uint8_t*)malloc(maxBufferSize);
     if (imageBuffer == nullptr) {
         Serial.println("Failed to allocate memory for image buffer.");
@@ -28,77 +28,77 @@ bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5
         return false;
     }
 
-    // 上传图像
+    // 上传图像 / Upload image
     uint32_t actualImageSize    = 0;
     fingerprint_status_t result = fp2.PS_UpImage(imageBuffer, maxBufferSize, actualImageSize);
 
     if (result == FINGERPRINT_OK) {
         Serial.printf("Image uploaded successfully, size: %d bytes\r\n", actualImageSize);
 
-        // 在画布上显示图像大小信息
+        // 在画布上显示图像大小信息 / Display image size information on canvas
         canvas.fillRect(0, 41, 320, 240, 0x0000);
         canvas.setCursor(2, 60);
         canvas.printf("Image size: %d bytes", actualImageSize);
 
-        // 显示指纹图像 (80x208, 4bit per pixel) 支持不同旋转角度
+        // 显示指纹图像 (80x208, 4bit per pixel) 支持不同旋转角度 / Display fingerprint image (80x208, 4bit per pixel) with different rotation angles support
         if (actualImageSize > 0) {
             const int imageWidth  = 80;
             const int imageHeight = 208;
 
-            // 遍历图像数据
-            for (int y = 0; y < imageHeight && y < 220; y++) {     // 限制高度避免超出屏幕
-                for (int x = 0; x < imageWidth && x < 200; x++) {  // 限制宽度避免超出屏幕
-                    // 计算像素在缓冲区中的位置 (每字节包含2个像素)
+            // 遍历图像数据 / Iterate through image data
+            for (int y = 0; y < imageHeight && y < 220; y++) {     // 限制高度避免超出屏幕 / Limit height to avoid exceeding screen
+                for (int x = 0; x < imageWidth && x < 200; x++) {  // 限制宽度避免超出屏幕 / Limit width to avoid exceeding screen
+                    // 计算像素在缓冲区中的位置 (每字节包含2个像素) / Calculate pixel position in buffer (each byte contains 2 pixels)
                     int byteIndex = (y * imageWidth + x) / 2;
                     if (byteIndex < actualImageSize) {
-                        // 获取4bit像素值 (0-15)
+                        // 获取4bit像素值 (0-15) / Get 4bit pixel value (0-15)
                         uint8_t pixelValue;
                         if ((y * imageWidth + x) % 2 == 0) {
-                            // 偶数像素取低4位
+                            // 偶数像素取低4位 / Even pixels take low 4 bits
                             pixelValue = imageBuffer[byteIndex] & 0x0F;
                         } else {
-                            // 奇数像素取高4位
+                            // 奇数像素取高4位 / Odd pixels take high 4 bits
                             pixelValue = (imageBuffer[byteIndex] & 0xF0) >> 4;
                         }
 
-                        // 将4bit值(0-15)转换为RGB565 (白色到黑色的渐变)
-                        // 0=黑色, 15=白色
-                        uint8_t grayValue = pixelValue * 17;  // 0-255范围
+                        // 将4bit值(0-15)转换为RGB565 (白色到黑色的渐变) / Convert 4bit value (0-15) to RGB565 (white to black gradient)
+                        // 0=黑色, 15=白色 / 0=black, 15=white
+                        uint8_t grayValue = pixelValue * 17;  // 0-255范围 / 0-255 range
                         uint16_t rgb565   = ((grayValue >> 3) << 11) | ((grayValue >> 2) << 5) | (grayValue >> 3);
 
-                        // 根据rotation参数计算旋转后的像素位置
+                        // 根据rotation参数计算旋转后的像素位置 / Calculate rotated pixel position based on rotation parameter
                         int drawX, drawY;
                         switch (rotation) {
-                            case 0:  // 不旋转
+                            case 0:  // 不旋转 / No rotation
                                 drawX = displayX + x;
                                 drawY = displayY + y;
                                 break;
-                            case 1:  // 顺时针90度
+                            case 1:  // 顺时针90度 / Clockwise 90 degrees
                                 drawX = displayX + imageHeight - 1 - y;
                                 drawY = displayY + x;
                                 break;
-                            case 2:  // 180度
+                            case 2:  // 180度 / 180 degrees
                                 drawX = displayX + imageWidth - 1 - x;
                                 drawY = displayY + imageHeight - 1 - y;
                                 break;
-                            case 3:  // 逆时针90度 (或顺时针270度)
+                            case 3:  // 逆时针90度 (或顺时针270度) / Counterclockwise 90 degrees (or clockwise 270 degrees)
                                 drawX = displayX + y;
                                 drawY = displayY + imageWidth - 1 - x;
                                 break;
-                            default:  // 默认顺时针90度
+                            default:  // 默认顺时针90度 / Default clockwise 90 degrees
                                 drawX = displayX + imageHeight - 1 - y;
                                 drawY = displayY + x;
                                 break;
                         }
 
-                        // 在画布上绘制像素
+                        // 在画布上绘制像素 / Draw pixel on canvas
                         canvas.drawPixel(drawX, drawY, rgb565);
                     }
                 }
             }
         }
 
-        // 释放内存
+        // 释放内存 / Free memory
         free(imageBuffer);
         return true;
 
@@ -107,7 +107,7 @@ bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5
         canvas.setCursor(2, 60);
         canvas.printf("Failed to upload image");
 
-        // 释放内存
+        // 释放内存 / Free memory
         free(imageBuffer);
         return false;
     }
@@ -116,7 +116,7 @@ bool displayFingerprintImage(M5UnitFingerprint2& fp2, uint32_t maxBufferSize, M5
 bool displaySystemParameters(M5UnitFingerprint2& fp2, M5Canvas& canvas, int displayX, int displayY,
                                   bool clearArea)
 {
-    // 读取系统参数
+    // 读取系统参数 / Read system parameters
     PS_ReadSysPara_BasicParams sysParams;
     fingerprint_status_t result = fp2.PS_ReadSysPara(sysParams);
 
@@ -127,13 +127,13 @@ bool displaySystemParameters(M5UnitFingerprint2& fp2, M5Canvas& canvas, int disp
         return false;
     }
 
-    // 如果需要清除显示区域
+    // 如果需要清除显示区域 / If need to clear display area
     if (clearArea) {
-        canvas.fillRect(displayX, displayY, 320 - displayX, 200, 0x0000);  // 清除显示区域
+        canvas.fillRect(displayX, displayY, 320 - displayX, 200, 0x0000);  // 清除显示区域 / Clear display area
     }
 
-    // 显示系统参数
-    int lineHeight = 20;  // 每行的高度
+    // 显示系统参数 / Display system parameters
+    int lineHeight = 20;  // 每行的高度 / Height per line
     int currentY   = displayY;
 
     canvas.setCursor(displayX, currentY);

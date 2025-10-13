@@ -214,18 +214,18 @@ typedef void (*PS_WakeupCallback_t)(const uint8_t* wakeupPacket, size_t packetLe
 
 //PS_WriteReg 寄存器序号 枚举类型 / PS_WriteReg register number enumeration type
 typedef enum : uint8_t {
-    FP_REG_DELAY_TIME     = 0x00, // 延迟时间寄存器（DelayTime） / Delay time register (DelayTime)
-    FP_REG_ENROLL_TIMES   = 0x01, // 注册次数寄存器（EnrollTimes） / Enrollment times register (EnrollTimes)
-    FP_REG_IMAGE_FORMAT   = 0x02, // 图像格式寄存器（ImageFormat），固定格式 0 / Image format register (ImageFormat), fixed format 0
-    FP_REG_ENROLL_MODE    = 0x03, // 注册逻辑寄存器（EnrollMode），mode 0 / Enrollment logic register (EnrollMode), mode 0
-    FP_REG_BAUD_RATE      = 0x04, // 波特率控制寄存器（BaudRate = 9600 * (N + 1)） / Baud rate control register (BaudRate = 9600 * (N + 1))
-    FP_REG_MATCH_LEVEL    = 0x05, // 比对阈值寄存器（MatchLevel，level 1–5） / Match threshold register (MatchLevel, level 1–5)
+    // FP_REG_DELAY_TIME     = 0x00, // 延迟时间寄存器（DelayTime） / Delay time register (DelayTime)
+    // FP_REG_ENROLL_TIMES   = 0x01, // 注册次数寄存器（EnrollTimes） / Enrollment times register (EnrollTimes)
+    // FP_REG_IMAGE_FORMAT   = 0x02, // 图像格式寄存器（ImageFormat），固定格式 0 / Image format register (ImageFormat), fixed format 0
+    // FP_REG_ENROLL_MODE    = 0x03, // 注册逻辑寄存器（EnrollMode），mode 0 / Enrollment logic register (EnrollMode), mode 0
+    // FP_REG_BAUD_RATE      = 0x04, // 波特率控制寄存器（BaudRate = 9600 * (N + 1)） / Baud rate control register (BaudRate = 9600 * (N + 1))
+    // FP_REG_MATCH_LEVEL    = 0x05, // 比对阈值寄存器（MatchLevel，level 1–5） / Match threshold register (MatchLevel, level 1–5)
     FP_REG_PACKET_SIZE    = 0x06, // 包大小寄存器（PacketSize：0=32B 1=64B 2=128B 3=256B） / Packet size register (PacketSize: 0=32B 1=64B 2=128B 3=256B)
-    FP_REG_SECURITY_LEVEL = 0x07, // 加密等级寄存器（SecurityLevel：0=level0 1=保留 2=level2 3=level3） / Encryption level register (SecurityLevel: 0=level0 1=reserved 2=level2 3=level3)
-    FP_REG_RESERVED_08    = 0x08, // 保留 / Reserved
-    FP_REG_RESERVED_09    = 0x09, // 保留 / Reserved
-    FP_REG_PRODUCT_SN     = 0x0A, // 产品型号寄存器（ProductSN） / Product model register (ProductSN)
-    FP_REG_LED_CTRL       = 0x0B  // 自动背光灯寄存器（LedCtr） / Auto backlight register (LedCtr)
+    // FP_REG_SECURITY_LEVEL = 0x07, // 加密等级寄存器（SecurityLevel：0=level0 1=保留 2=level2 3=level3） / Encryption level register (SecurityLevel: 0=level0 1=reserved 2=level2 3=level3)
+    // FP_REG_RESERVED_08    = 0x08, // 保留 / Reserved
+    // FP_REG_RESERVED_09    = 0x09, // 保留 / Reserved
+    // FP_REG_PRODUCT_SN     = 0x0A, // 产品型号寄存器（ProductSN） / Product model register (ProductSN)
+    // FP_REG_LED_CTRL       = 0x0B  // 自动背光灯寄存器（LedCtr） / Auto backlight register (LedCtr)
 } fingerprint_register_id_t;
 
 //PS_ReadSysPara 应答包 - 16字节系统参数 / PS_ReadSysPara response packet - 16-byte system parameters

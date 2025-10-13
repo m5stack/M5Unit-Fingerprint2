@@ -450,27 +450,27 @@ fingerprint_status_t M5UnitFingerprint2::PS_UpImage(uint8_t* imageBuffer, uint32
 
     serialPrintln("PS_UpImage ACK received, starting to receive image data packets...");
 
-    // 开始接收图像数据包
+    // 开始接收图像数据包 / Start receiving image data packets
     uint32_t totalPacketsReceived = 0;
     uint32_t totalBytesReceived = 0;
     bool receivingComplete = false;
 
     while (!receivingComplete) {
-        // 接收数据包（可能是DATAPACKET或ENDDATAPACKET）
+        // 接收数据包（可能是DATAPACKET或ENDDATAPACKET） / Receive data packet (could be DATAPACKET or ENDDATAPACKET)
         Fingerprint_Packet dataPacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_DATAPACKET, nullptr, 0);
         if (!nonConstThis->receivePacketData(dataPacket, 10000)) {
             serialPrintf("Failed to receive image data packet #%d\r\n", totalPacketsReceived + 1);
             return FINGERPRINT_PACKET_TIMEOUT;
         }
 
-        // 检查数据包类型
+        // 检查数据包类型 / Check data packet type
         uint8_t packetType = dataPacket.get_type();
         if (packetType == FINGERPRINT_PACKET_DATAPACKET) {
-            // 普通数据包，继续接收
+            // 普通数据包，继续接收 / Normal data packet, continue receiving
             serialPrintf("Received data packet #%d, size: %d bytes\r\n", 
                         totalPacketsReceived + 1, dataPacket.get_actual_data_length());
         } else if (packetType == FINGERPRINT_PACKET_ENDDATAPACKET) {
-            // 结束数据包，这是最后一个包
+            // 结束数据包，这是最后一个包 / End data packet, this is the last packet
             serialPrintf("Received end data packet #%d, size: %d bytes\r\n", 
                         totalPacketsReceived + 1, dataPacket.get_actual_data_length());
             receivingComplete = true;
@@ -479,32 +479,32 @@ fingerprint_status_t M5UnitFingerprint2::PS_UpImage(uint8_t* imageBuffer, uint32
             return FINGERPRINT_PACKET_BADPACKET;
         }
 
-        // 将当前包的数据添加到图像数据中
+        // 将当前包的数据添加到图像数据中 / Add current packet data to image data
         const uint8_t* packetData = dataPacket.get_data();
         uint16_t packetDataLength = dataPacket.get_actual_data_length();
         
         if (packetDataLength > 0) {
-            // 检查用户提供的缓冲区是否有足够空间
+            // 检查用户提供的缓冲区是否有足够空间 / Check if user-provided buffer has enough space
             if (totalBytesReceived + packetDataLength > bufferSize) {
                 serialPrintf("Image data exceeds provided buffer size (%d bytes)\r\n", bufferSize);
                 return FINGERPRINT_PACKET_OVERFLOW;
             }
             
-            // 复制数据到用户提供的图像缓冲区
+            // 复制数据到用户提供的图像缓冲区 / Copy data to user-provided buffer
             memcpy(&imageBuffer[totalBytesReceived], packetData, packetDataLength);
             totalBytesReceived += packetDataLength;
         }
 
         totalPacketsReceived++;
 
-        // 防止无限循环，设置最大包数限制
+        // 防止无限循环，设置最大包数限制 / Prevent infinite loop, set maximum packet count limit
         if (totalPacketsReceived > 1000) {
             serialPrintln("Warning: Received too many packets, stopping...");
             break;
         }
     }
 
-    // 设置实际接收的图像大小
+    // 设置实际接收的图像大小 / Set actual received image size
     actualImageSize = totalBytesReceived;
 
     serialPrintf("Image upload completed successfully!\r\n");
@@ -512,7 +512,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_UpImage(uint8_t* imageBuffer, uint32
     serialPrintf("Total image data size: %d bytes\r\n", actualImageSize);
 
 // #if defined M5_MODULE_DEBUG_SERIAL
-//     // 可选：打印图像数据的前几个字节作为验证
+//     // 可选：打印图像数据的前几个字节作为验证 / Optional: Print first few bytes of image data for verification
 //     if (actualImageSize > 0) {
 //         serialPrint("Image data header (first 16 bytes): ");
 //         for (int i = 0; i < 16 && i < actualImageSize; i++) {
@@ -651,21 +651,21 @@ fingerprint_status_t M5UnitFingerprint2::PS_WriteReg(fingerprint_register_id_t R
     Fingerprint_Packet commandPacket =
         Fingerprint_Packet::new_command_packet(_fp2_address, FINGERPRINT_WRITE_REG, params, 2);
 
-    // 发送命令包
+    // 发送命令包 / Send command packet
     M5UnitFingerprint2* nonConstThis = const_cast<M5UnitFingerprint2*>(this);
     if (!nonConstThis->sendPacketData(commandPacket)) {
         serialPrintln("Failed to send PS_WriteReg command");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
-    // 接收响应包
+    // 接收响应包 / Receive response packet
     Fingerprint_Packet responsePacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_ACKPACKET, nullptr, 0);
     if (!nonConstThis->receivePacketData(responsePacket, 1000)) {
         serialPrintln("Failed to receive PS_WriteReg response");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
-    // 检查响应包类型
+    // 检查响应包类型 / Check response packet type
     if (responsePacket.get_type() != FINGERPRINT_PACKET_ACKPACKET) {
         serialPrintln("Invalid response packet type for PS_WriteReg");
         return FINGERPRINT_PACKET_BADPACKET;
@@ -728,7 +728,6 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadSysPara(PS_ReadSysPara_BasicPara
     const uint8_t* responseData = responsePacket.get_data();
     uint8_t confirmationCode    = responseData[0];
 
-#ifdef M5_MODULE_DEBUG_SERIAL_ENABLED
     // 如果命令执行成功，解析16字节的系统参数 / If command executed successfully, parse 16 bytes of system parameters
     if (confirmationCode == FINGERPRINT_OK) {
         // 确保有足够的数据长度 / Ensure sufficient data length
@@ -746,6 +745,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadSysPara(PS_ReadSysPara_BasicPara
             RawData.packet_size = (paramData[12] << 8) | paramData[13];             // 数据包大小 (2字节) / Packet size (2 bytes)
             RawData.baud_rate = (paramData[14] << 8) | paramData[15];               // 串口波特率 (2字节) / Serial baud rate (2 bytes)
 
+#ifdef M5_MODULE_DEBUG_SERIAL_ENABLED
             serialPrintf("Read system parameters successfully:\r\n");
             serialPrintf("  Status Register: 0x%04X\r\n", RawData.status_register);
             serialPrintf("  Template Size: %d\r\n", RawData.temp_size);
@@ -773,13 +773,12 @@ fingerprint_status_t M5UnitFingerprint2::PS_ReadSysPara(PS_ReadSysPara_BasicPara
             M5_MODULE_DEBUG_SERIAL.println("");
 
             serialPrintf("  Baud Rate: %d\r\n", RawData.baud_rate * 9600);
+#endif
         } else {
             serialPrintln("Insufficient data length for system parameters");
             return FINGERPRINT_PACKET_OVERFLOW;
         }
     }
-
-#endif
 
     serialPrintf("Read system parameters result: %s [confirmation: %s]\r\n",
                  (confirmationCode == FINGERPRINT_OK) ? "Success" : "Failed",
@@ -1120,41 +1119,41 @@ fingerprint_status_t M5UnitFingerprint2::PS_ValidTemplateNum(uint16_t &ValidNum)
     Fingerprint_Packet commandPacket =
         Fingerprint_Packet::new_command_packet(_fp2_address, FINGERPRINT_VALID_MODEL_COUNT, nullptr, 0);
 
-    // 发送命令包
+    // 发送命令包 / Send command packet
     M5UnitFingerprint2* nonConstThis = const_cast<M5UnitFingerprint2*>(this);
     if (!nonConstThis->sendPacketData(commandPacket)) {
         serialPrintln("Failed to send PS_ValidTemplateNum command");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
-    // 接收响应包
+    // 接收响应包 / Receive response packet
     Fingerprint_Packet responsePacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_ACKPACKET, nullptr, 0);
     if (!nonConstThis->receivePacketData(responsePacket, 1000)) {
         serialPrintln("Failed to receive PS_ValidTemplateNum response");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
-    // 检查响应包类型
+    // 检查响应包类型 / Check response packet type
     if (responsePacket.get_type() != FINGERPRINT_PACKET_ACKPACKET) {
         serialPrintln("Invalid response packet type for PS_ValidTemplateNum");
         return FINGERPRINT_PACKET_BADPACKET;
     }
 
-    // 检查数据长度 (1字节确认码 + 2字节有效模板数量)
+    // 检查数据长度 (1字节确认码 + 2字节有效模板数量) / Check data length (1 byte confirmation code + 2 bytes valid template count)
     if (responsePacket.get_actual_data_length() < 3) {
         serialPrintln("Invalid response data length for PS_ValidTemplateNum");
         return FINGERPRINT_PACKET_OVERFLOW;
     }
 
-    // 获取响应数据
+    // 获取响应数据 / Get response data
     const uint8_t* responseData = responsePacket.get_data();
     uint8_t confirmationCode = responseData[0];
 
-    // 如果命令执行成功，解析2字节的有效模板数量
+    // 如果命令执行成功，解析2字节的有效模板数量 / If command executed successfully, parse 2 bytes valid template count
     if (confirmationCode == FINGERPRINT_OK) {
-        // 确保有足够的数据长度
+        // 确保有足够的数据长度 / Ensure sufficient data length
         if (responsePacket.get_actual_data_length() >= 3) {
-            // 解析2字节有效模板数量 (从第1字节开始，跳过确认码)，大端字节序
+            // 解析2字节有效模板数量 (从第1字节开始，跳过确认码)，大端字节序 / Parse 2 bytes valid template count (start from byte 1, skip confirmation code), big-endian byte order
             ValidNum = (responseData[1] << 8) | responseData[2];
 
             serialPrintf("Valid template count: %d\r\n", ValidNum);
@@ -1519,33 +1518,33 @@ fingerprint_status_t M5UnitFingerprint2::PS_GetImageInfo(uint8_t &imageArea, uin
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
-    // 接收响应包
+    // 接收响应包 / Receive response packet
     Fingerprint_Packet responsePacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_ACKPACKET, nullptr, 0);
     if (!nonConstThis->receivePacketData(responsePacket, 1000)) {
         serialPrintln("Failed to receive PS_GetImageInfo response");
         return FINGERPRINT_PACKET_TIMEOUT;
     }
 
-    // 检查响应包类型
+    // 检查响应包类型 / Check response packet type
     if (responsePacket.get_type() != FINGERPRINT_PACKET_ACKPACKET) {
         serialPrintln("Invalid response packet type for PS_GetImageInfo");
         return FINGERPRINT_PACKET_BADPACKET;
     }
 
-    // 检查数据长度 (至少要有确认码1字节)
+    // 检查数据长度 (至少要有确认码1字节) / Check data length (at least 1 byte confirmation code required)
     if (responsePacket.get_actual_data_length() < 1) {
         serialPrintln("Invalid response data length for PS_GetImageInfo");
         return FINGERPRINT_PACKET_OVERFLOW;
     }
 
-    // 获取响应数据
+    // 获取响应数据 / Get response data
     const uint8_t* responseData = responsePacket.get_data();
     uint8_t confirmationCode    = responseData[0];
 
-    // 如果操作成功且有足够的数据，解析图像信息
+    // 如果操作成功且有足够的数据，解析图像信息 / If operation succeeds and has enough data, parse image information
     if (confirmationCode == FINGERPRINT_OK && responsePacket.get_actual_data_length() >= 3) {
-        imageArea = responseData[1];    // 图像面积（百分比）
-        imageQuality = responseData[2]; // 图像质量（0:合格，其他：不合格）
+        imageArea = responseData[1];    // 图像面积（百分比） / Image area (percentage)
+        imageQuality = responseData[2]; // 图像质量（0:合格，其他：不合格） / Image quality (0: qualified, other: unqualified)
         
         serialPrintf("Get image info result: Success, Area: %d%%, Quality: %s [confirmation: %s]\r\n",
                      imageArea,
@@ -1963,39 +1962,39 @@ fingerprint_status_t M5UnitFingerprint2::PS_DownloadTemplateAuto(
     }
 }
 
-// 特殊上传模板自动版本 - 自动循环上传完整模板数据
+// 特殊上传模板自动版本 - 自动循环上传完整模板数据 / Special upload template auto version - Automatically loop upload complete template data
 fingerprint_status_t M5UnitFingerprint2::PS_UploadTemplateAuto(
-    uint8_t* templateBuffer,        // 上传缓冲区
-    uint32_t bufferSize,            // 缓冲区大小
-    uint32_t& actualSize,           // 返回的实际上传大小
-    PS_UploadTemplateCallback_t callback // 每接收一段数据时的回调
+    uint8_t* templateBuffer,        // 上传缓冲区 / Upload buffer
+    uint32_t bufferSize,            // 缓冲区大小 / Buffer size
+    uint32_t& actualSize,           // 返回的实际上传大小 / Returned actual upload size
+    PS_UploadTemplateCallback_t callback // 每接收一段数据时的回调 / Callback when receiving each data segment
 ) const
 {
-    // 参数检查
+    // 参数检查 / Parameter check
     if (templateBuffer == nullptr || bufferSize == 0) {
         serialPrintln("Invalid parameters for PS_UploadTemplateAuto");
         return FINGERPRINT_PARAM_ERROR;
     }
 
-    actualSize = 0; // 初始化实际上传大小
+    actualSize = 0; // 初始化实际上传大小 / Initialize actual upload size
     
-    uint16_t offset = 0;               // 起始偏移地址
-    uint16_t uploadSize = 100;         // 每次请求的上传大小
-    uint16_t currentActualSize = 0;    // 当前包的实际大小
-    uint32_t totalSize = 0;            // 累计接收的总大小
-    int packetCount = 0;               // 数据包计数器
-    bool uploadComplete = false;       // 上传完成标志
-    bool callbackAborted = false;      // 回调中止标志
+    uint16_t offset = 0;               // 起始偏移地址 / Start offset address
+    uint16_t uploadSize = 100;         // 每次请求的上传大小 / Upload size per request
+    uint16_t currentActualSize = 0;    // 当前包的实际大小 / Actual size of current packet
+    uint32_t totalSize = 0;            // 累计接收的总大小 / Total size received cumulatively
+    int packetCount = 0;               // 数据包计数器 / Packet counter
+    bool uploadComplete = false;       // 上传完成标志 / Upload complete flag
+    bool callbackAborted = false;      // 回调中止标志 / Callback aborted flag
     
     serialPrintln("PS_UploadTemplateAuto: Starting automatic template upload...");
     serialPrintf("Buffer size: %d bytes, upload packet size: %d bytes\r\n", bufferSize, uploadSize);
     
-    // 清空缓冲区
+    // 清空缓冲区 / Clear buffer
     memset(templateBuffer, 0, bufferSize);
     
-    // 循环接收所有模板数据包
+    // 循环接收所有模板数据包 / Loop to receive all template data packets
     while (!uploadComplete && !callbackAborted) {
-        // 检查缓冲区是否足够容纳下一个数据包
+        // 检查缓冲区是否足够容纳下一个数据包 / Check if buffer has enough space for next data packet
         if (totalSize + uploadSize > bufferSize) {
             serialPrintf("PS_UploadTemplateAuto: Buffer size insufficient. Required: %d, Available: %d\r\n", 
                         totalSize + uploadSize, bufferSize);
@@ -2091,7 +2090,7 @@ fingerprint_status_t M5UnitFingerprint2::PS_UploadTemplateAuto(
     }
 }
 
-// 自动注册模板 - 自动注册指纹模板到指定ID
+// 自动注册模板 - 自动注册指纹模板到指定ID / Auto enroll template - Automatically enroll fingerprint template to specified ID
 fingerprint_status_t M5UnitFingerprint2::PS_AutoEnroll(uint16_t ID, 
                                                        uint8_t enrollCount, 
                                                        fingerprint_auto_enroll_flags_t flags, 
@@ -2099,31 +2098,31 @@ fingerprint_status_t M5UnitFingerprint2::PS_AutoEnroll(uint16_t ID,
                                                        uint8_t* param2,
                                                        PS_AutoEnrollCallback_t callback) const
 {
-    // 参数检查
-    if (enrollCount == 0 || enrollCount > 6) {  // 通常最多6次采集
+    // 参数检查 / Parameter check
+    if (enrollCount == 0 || enrollCount > 6) {  // 通常最多6次采集 / Usually up to 6 captures
         serialPrintln("Invalid enroll count for PS_AutoEnroll (1-6)");
         return FINGERPRINT_PARAM_ERROR;
     }
 
-    // 添加ID范围检查 (0-99)
+    // 添加ID范围检查 (0-99) / Add ID range check (0-99)
     if (ID > 99) {
         serialPrintf("Invalid ID for PS_AutoEnroll: %d (valid range: 0-99)\r\n", ID);
         return FINGERPRINT_PARAM_ERROR;
     }
 
-    // 创建命令参数 - 总共 5 字节 (ID: 2字节, enrollCount: 1字节, flags: 2字节)
+    // 创建命令参数 - 总共 5 字节 (ID: 2字节, enrollCount: 1字节, flags: 2字节) / Create command parameters - Total 5 bytes (ID: 2 bytes, enrollCount: 1 byte, flags: 2 bytes)
     uint8_t params[5];
-    params[0] = (ID >> 8) & 0xFF;           // ID 高字节
-    params[1] = ID & 0xFF;                  // ID 低字节  
-    params[2] = enrollCount;                // 注册次数（录入次数）
-    params[3] = (static_cast<uint16_t>(flags) >> 8) & 0xFF;  // 参数高字节
-    params[4] = static_cast<uint16_t>(flags) & 0xFF;         // 参数低字节
+    params[0] = (ID >> 8) & 0xFF;           // ID 高字节 / ID high byte
+    params[1] = ID & 0xFF;                  // ID 低字节 / ID low byte
+    params[2] = enrollCount;                // 注册次数（录入次数） / Enrollment count (capture count)
+    params[3] = (static_cast<uint16_t>(flags) >> 8) & 0xFF;  // 参数高字节 / Parameter high byte
+    params[4] = static_cast<uint16_t>(flags) & 0xFF;         // 参数低字节 / Parameter low byte
 
-    // 创建命令数据包 - 使用命令代码 0x31
+    // 创建命令数据包 - 使用命令代码 0x31 / Create command packet - Use command code 0x31
     Fingerprint_Packet commandPacket =
         Fingerprint_Packet::new_command_packet(_fp2_address, FINGERPRINT_AUTO_ENROLL, params, 5);
 
-    // 发送命令包
+    // 发送命令包 / Send command packet
     M5UnitFingerprint2* nonConstThis = const_cast<M5UnitFingerprint2*>(this);
     if (!nonConstThis->sendPacketData(commandPacket)) {
         serialPrintln("Failed to send PS_AutoEnroll command");
@@ -2133,14 +2132,14 @@ fingerprint_status_t M5UnitFingerprint2::PS_AutoEnroll(uint16_t ID,
     serialPrintf("PS_AutoEnroll: Starting enrollment [ID: %d, Count: %d, Flags: 0x%04X]\r\n",
                  ID, enrollCount, static_cast<uint16_t>(flags));
     
-    // PS_AutoEnroll命令特殊处理 - 需要接收多个响应包
+    // PS_AutoEnroll命令特殊处理 - 需要接收多个响应包 / PS_AutoEnroll command special handling - Need to receive multiple response packets
     fingerprint_status_t finalResult = FINGERPRINT_OK;
     uint8_t lastParam1 = 0, lastParam2 = 0;
     int packetCount = 0;
     unsigned long startTime = millis();
-    const unsigned long totalTimeout = 60000; // 总超时时间60秒（增加时间以适应多次采集）
+    const unsigned long totalTimeout = 60000; // 总超时时间60秒（增加时间以适应多次采集） / Total timeout 60 seconds (increased to accommodate multiple captures)
     bool enrollmentComplete = false;
-    bool callbackAborted = false; // 标记是否被回调函数中止
+    bool callbackAborted = false; // 标记是否被回调函数中止 / Flag whether aborted by callback function
     
     while (millis() - startTime < totalTimeout && !enrollmentComplete && !callbackAborted) {
         // 接收响应包 / Receive response packet
@@ -2306,15 +2305,15 @@ fingerprint_status_t M5UnitFingerprint2::PS_AutoIdentify(uint8_t securityLevel,
     bool callbackAborted = false; // 标记是否被回调函数中止 / Flag whether aborted by callback function
     
     while (millis() - startTime < totalTimeout && !identificationComplete && !callbackAborted) {
-        // 接收响应包
+        // 接收响应包 / Receive response packet
         Fingerprint_Packet responsePacket(FINGERPRINT_STARTCODE, 0, FINGERPRINT_PACKET_ACKPACKET, nullptr, 0);
         if (!nonConstThis->receivePacketData(responsePacket, 10000)) {
-            // 如果这是第一个包，则认为是通信错误
+            // 如果这是第一个包，则认为是通信错误 / If this is the first packet, consider it a communication error
             if (packetCount == 0) {
                 serialPrintln("Failed to receive PS_AutoIdentify initial response");
                 return FINGERPRINT_PACKET_TIMEOUT;
             }
-            // 否则可能是验证过程结束，退出循环
+            // 否则可能是验证过程结束，退出循环 / Otherwise verification process may have ended, exit loop
             break;
         }
 
