@@ -910,7 +910,6 @@ if (status != FINGERPRINT_OK) {
 
 ## 版本信息
 
-- **当前版本**: 1.1.0
 - **作者**: M5Stack
 - **维护者**: M5Stack
 - **许可证**: MIT

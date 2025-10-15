@@ -910,7 +910,6 @@ if (status != FINGERPRINT_OK) {
 
 ## Version Information
 
-- **Current Version**: 1.1.0
 - **Author**: M5Stack
 - **Maintainer**: M5Stack
 - **License**: MIT
